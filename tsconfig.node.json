@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "./node_modules/.tmp/types",
+    "outDir": "./node_modules/.tmp/build"
+  },
+  "include": ["vite.config.ts", "vitest.config.ts"]
+}

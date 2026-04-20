@@ -1,16 +1,39 @@
 import { useState, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
+import type { EventContentArg, DatesSetArg, DateSelectArg, EventDropArg } from '@fullcalendar/core';
+import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { getCourse } from '../data/courses';
-import { FRIENDS } from '../data/users';
-import { INITIAL_STUDY_BLOCKS } from '../data/studyBlocks';
-import CreateBlockModal from './CreateBlockModal';
+import { getCourse } from '../../data/courses';
+import { FRIENDS } from '../../data/users';
+import { INITIAL_STUDY_BLOCKS } from '../../data/studyBlocks';
+import CreateBlockModal from '../shared/CreateBlockModal';
+
+interface Block {
+  id: string;
+  courseId: string;
+  title: string;
+  start: string;
+  end: string;
+  ownerId: string;
+  participants: string[];
+  editable: boolean;
+}
+
+interface ModalState {
+  position: { x: number; y: number };
+  timeInfo: {
+    startStr: string;
+    endStr: string;
+    start: Date;
+    end: Date;
+  };
+}
 
 let blockCounter = 100;
 
-function toFCEvents(blocks) {
-  return blocks.map(block => {
+function toFCEvents(blocks: Block[]) {
+  return blocks.map((block) => {
     const course = getCourse(block.courseId);
     return {
       id: block.id,
@@ -31,12 +54,16 @@ function toFCEvents(blocks) {
   });
 }
 
-function ParticipantAvatars({ participants }) {
-  const friends = FRIENDS.filter(f => participants.includes(f.id));
+interface ParticipantAvatarsProps {
+  participants: string[];
+}
+
+function ParticipantAvatars({ participants }: ParticipantAvatarsProps) {
+  const friends = FRIENDS.filter((f: { id: string }) => participants.includes(f.id));
   if (friends.length === 0) return null;
   return (
     <div className="flex gap-0.5 mt-0.5 flex-wrap">
-      {friends.map(f => (
+      {friends.map((f: { id: string; avatarColor: string; initials: string; name: string }) => (
         <div
           key={f.id}
           className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold border border-white/60"
@@ -50,9 +77,9 @@ function ParticipantAvatars({ participants }) {
   );
 }
 
-function EventContent({ eventInfo }) {
+function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { event } = eventInfo;
-  const { participants, editable } = event.extendedProps;
+  const { participants, editable } = event.extendedProps as { participants: string[]; editable: boolean };
   const isOwned = editable !== false;
 
   return (
@@ -64,22 +91,20 @@ function EventContent({ eventInfo }) {
           <span className="text-[0.5rem] bg-white/30 rounded px-0.5 leading-tight flex-shrink-0">shared</span>
         )}
       </div>
-      {participants && participants.length > 0 && (
-        <ParticipantAvatars participants={participants} />
-      )}
+      {participants && participants.length > 0 && <ParticipantAvatars participants={participants} />}
     </div>
   );
 }
 
 export default function StudyCalendar() {
-  const calRef = useRef(null);
-  const [blocks, setBlocks] = useState(INITIAL_STUDY_BLOCKS);
-  const [modal, setModal] = useState(null);
+  const calRef = useRef<FullCalendar>(null);
+  const [blocks, setBlocks] = useState<Block[]>(INITIAL_STUDY_BLOCKS as Block[]);
+  const [modal, setModal] = useState<ModalState | null>(null);
   const [weekRange, setWeekRange] = useState('');
 
   const fcEvents = toFCEvents(blocks);
 
-  function getModalPosition(jsEvent) {
+  function getModalPosition(jsEvent: MouseEvent | null) {
     if (jsEvent) {
       return {
         x: Math.min(jsEvent.clientX + 10, window.innerWidth - 250),
@@ -90,9 +115,9 @@ export default function StudyCalendar() {
     return { x: (rect?.left || 300) + 100, y: (rect?.top || 200) + 80 };
   }
 
-  function handleDateSelect(selectInfo) {
+  function handleDateSelect(selectInfo: DateSelectArg) {
     setModal({
-      position: getModalPosition(selectInfo.jsEvent),
+      position: getModalPosition(selectInfo.jsEvent as MouseEvent | null),
       timeInfo: {
         startStr: selectInfo.startStr,
         endStr: selectInfo.endStr,
@@ -103,9 +128,9 @@ export default function StudyCalendar() {
     selectInfo.view.calendar.unselect();
   }
 
-  function handleModalConfirm(course) {
+  function handleModalConfirm(course: { id: string; code: string }) {
     if (!modal?.timeInfo) return;
-    const newBlock = {
+    const newBlock: Block = {
       id: `block-new-${++blockCounter}`,
       courseId: course.id,
       title: course.code,
@@ -115,33 +140,29 @@ export default function StudyCalendar() {
       participants: ['user-dasanie'],
       editable: true,
     };
-    setBlocks(prev => [...prev, newBlock]);
+    setBlocks((prev) => [...prev, newBlock]);
     setModal(null);
   }
 
-  function handleEventResize(info) {
+  function handleEventResize(info: EventResizeDoneArg) {
     const { event } = info;
-    setBlocks(prev => prev.map(b =>
-      b.id === event.id
-        ? { ...b, start: event.startStr, end: event.endStr }
-        : b
-    ));
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === event.id ? { ...b, start: event.startStr, end: event.endStr } : b))
+    );
   }
 
-  function handleEventDrop(info) {
+  function handleEventDrop(info: EventDropArg) {
     const { event } = info;
-    setBlocks(prev => prev.map(b =>
-      b.id === event.id
-        ? { ...b, start: event.startStr, end: event.endStr }
-        : b
-    ));
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === event.id ? { ...b, start: event.startStr, end: event.endStr } : b))
+    );
   }
 
-  function handleDatesSet(dateInfo) {
+  function handleDatesSet(dateInfo: DatesSetArg) {
     const start = dateInfo.start;
     const end = new Date(dateInfo.end);
     end.setDate(end.getDate() - 1);
-    const opts = { month: 'short', day: 'numeric' };
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
     const startStr = start.toLocaleDateString('en-US', opts);
     const endStr = end.toLocaleDateString('en-US', { ...opts, year: 'numeric' });
     setWeekRange(`${startStr} – ${endStr}`);
@@ -153,35 +174,24 @@ export default function StudyCalendar() {
 
   return (
     <div className="flex flex-col flex-1 min-w-0 bg-white overflow-hidden">
-      {/* Custom toolbar */}
       <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 flex-shrink-0">
         <h2 className="text-2xl font-bold text-gray-800 mr-1">This Week</h2>
-        <button
-          onClick={navPrev}
-          className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-        >
+        <button onClick={navPrev} aria-label="Previous week" className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <span className="text-sm font-medium text-gray-500 min-w-[150px] text-center select-none">{weekRange}</span>
-        <button
-          onClick={navNext}
-          className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-        >
+        <button onClick={navNext} aria-label="Next week" className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
-        <button
-          onClick={navToday}
-          className="ml-auto text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium"
-        >
+        <button onClick={navToday} className="ml-auto text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium">
           Today
         </button>
       </div>
 
-      {/* Calendar area */}
       <div className="flex-1 overflow-hidden">
         <FullCalendar
           ref={calRef}
@@ -222,7 +232,6 @@ export default function StudyCalendar() {
         />
       </div>
 
-      {/* Block creation modal */}
       {modal && (
         <CreateBlockModal
           position={modal.position}

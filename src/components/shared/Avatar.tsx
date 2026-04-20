@@ -1,4 +1,4 @@
-import { statusConfig } from '../../data/users';
+import { statusConfig } from '@/lib/status';
 
 type Size = 'sm' | 'md' | 'lg';
 

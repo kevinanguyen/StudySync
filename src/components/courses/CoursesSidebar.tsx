@@ -6,13 +6,8 @@ import AddCourseModal from './AddCourseModal';
 import { useCourses } from '@/hooks/useCourses';
 import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth.service';
+import { statusConfig } from '@/lib/status';
 import type { EnrolledCourse } from '@/types/domain';
-
-const STATUS_LABELS: Record<string, { color: string; label: string }> = {
-  available: { color: '#22C55E', label: 'Available' },
-  studying: { color: '#EAB308', label: 'Studying' },
-  busy: { color: '#EF4444', label: 'Busy' },
-};
 
 export default function CoursesSidebar() {
   const navigate = useNavigate();
@@ -38,7 +33,7 @@ export default function CoursesSidebar() {
     }
   }
 
-  const statusCfg = profile ? STATUS_LABELS[profile.status] : STATUS_LABELS.available;
+  const statusCfg = profile ? statusConfig[profile.status] : statusConfig.available;
 
   return (
     <aside className="flex flex-col bg-white border-r border-gray-200" style={{ width: '210px', minWidth: '210px' }}>

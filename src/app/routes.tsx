@@ -3,6 +3,7 @@ import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import DashboardPage from '@/pages/DashboardPage';
 import GroupPage from '@/pages/GroupPage';
+import SettingsPage from '@/pages/SettingsPage';
 import ProtectedRoute from './ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -22,6 +23,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <GroupPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <ProtectedRoute>
+        <SettingsPage />
       </ProtectedRoute>
     ),
   },

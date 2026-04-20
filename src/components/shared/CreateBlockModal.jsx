@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { COURSES } from '../data/courses';
-import { CURRENT_USER } from '../data/users';
+import { COURSES } from '../../data/courses';
+import { CURRENT_USER } from '../../data/users';
 
 export default function CreateBlockModal({ position, timeInfo, onConfirm, onCancel }) {
   const [selectedCourse, setSelectedCourse] = useState(null);

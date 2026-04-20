@@ -1,6 +1,6 @@
-import { COURSES } from '../data/courses';
-import { CURRENT_USER, statusConfig } from '../data/users';
-import Avatar from './Avatar';
+import { COURSES } from '../../data/courses';
+import { CURRENT_USER, statusConfig } from '../../data/users';
+import Avatar from '../shared/Avatar';
 
 export default function CoursesSidebar() {
   const enrolledCourses = COURSES.filter(c => CURRENT_USER.enrolledCourses.includes(c.id));

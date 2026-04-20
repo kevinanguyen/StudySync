@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { FRIENDS, statusConfig } from '../data/users';
-import { GROUPS as GROUPS_DATA } from '../data/groups';
-import Avatar from './Avatar';
+import { FRIENDS, statusConfig } from '../../data/users';
+import { GROUPS as GROUPS_DATA } from '../../data/groups';
+import Avatar from '../shared/Avatar';
 
 export default function RightPanel() {
   const [search, setSearch] = useState('');

@@ -1,4 +1,4 @@
-import { statusConfig } from '../data/users';
+import { statusConfig } from '../../data/users';
 
 export default function Avatar({ user, size = 'md', showStatus = false, className = '' }) {
   const sizes = {

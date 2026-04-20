@@ -2,10 +2,10 @@ import { useState, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { getCourse } from '../data/courses';
-import { FRIENDS } from '../data/users';
-import { INITIAL_STUDY_BLOCKS } from '../data/studyBlocks';
-import CreateBlockModal from './CreateBlockModal';
+import { getCourse } from '../../data/courses';
+import { FRIENDS } from '../../data/users';
+import { INITIAL_STUDY_BLOCKS } from '../../data/studyBlocks';
+import CreateBlockModal from '../shared/CreateBlockModal';
 
 let blockCounter = 100;
 

@@ -1,7 +1,7 @@
-import Header from './components/Header';
-import CoursesSidebar from './components/CoursesSidebar';
-import StudyCalendar from './components/StudyCalendar';
-import RightPanel from './components/RightPanel';
+import Header from './components/layout/Header';
+import CoursesSidebar from './components/courses/CoursesSidebar';
+import StudyCalendar from './components/calendar/StudyCalendar';
+import RightPanel from './components/friends/RightPanel';
 
 export default function App() {
   return (

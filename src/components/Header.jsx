@@ -19,11 +19,6 @@ export default function Header() {
         <span className="text-lg font-bold tracking-tight">StudySync</span>
       </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Available</span>
-        <div className="w-3 h-3 rounded-full bg-green-400 border-2 border-white/50 shadow-sm" />
-      </div>
     </header>
   );
 }

@@ -1,5 +1,5 @@
 import { COURSES } from '../data/courses';
-import { CURRENT_USER } from '../data/users';
+import { CURRENT_USER, statusConfig } from '../data/users';
 import Avatar from './Avatar';
 
 export default function CoursesSidebar() {
@@ -47,10 +47,12 @@ export default function CoursesSidebar() {
       {/* USER PROFILE */}
       <div className="px-3 py-3 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Avatar user={CURRENT_USER} size="md" />
+          <Avatar user={CURRENT_USER} size="md" showStatus />
           <div>
             <p className="text-xs font-semibold text-gray-800 leading-tight">{CURRENT_USER.name}</p>
-            <p className="text-[10px] text-gray-500">{CURRENT_USER.username}</p>
+            <p className="text-[10px] font-medium" style={{ color: statusConfig[CURRENT_USER.status]?.color }}>
+              {statusConfig[CURRENT_USER.status]?.label}
+            </p>
           </div>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors p-1">

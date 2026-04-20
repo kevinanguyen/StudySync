@@ -1,6 +1,8 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import Avatar from '@/components/shared/Avatar';
+import { listParticipants, respondToInvite, type ParticipantWithProfile } from '@/services/events.service';
 import type { EventRow, EnrolledCourse, EventVisibility } from '@/types/domain';
 import type { EventInput } from '@/services/events.service';
 
@@ -41,6 +43,8 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   const [visibility, setVisibility] = useState<EventVisibility>('private');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -54,6 +58,11 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
       setDescription(event.description ?? '');
       setVisibility(event.visibility);
       setErr(null);
+      setParticipantsLoading(true);
+      listParticipants(event.id)
+        .then(setParticipants)
+        .catch(() => setParticipants([]))
+        .finally(() => setParticipantsLoading(false));
     }
   }, [event]);
 
@@ -61,6 +70,19 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
 
   const isOwner = event.owner_id === currentUserId;
   const course = event.course_id ? courses.find((c) => c.id === event.course_id) : null;
+
+  async function handleRespond(response: 'accepted' | 'declined' | 'maybe') {
+    if (!event || !currentUserId) return;
+    try {
+      await respondToInvite(event.id, currentUserId, response);
+      const updated = await listParticipants(event.id);
+      setParticipants(updated);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Failed to respond.');
+    }
+  }
+
+  const myParticipation = participants.find((p) => p.participant.user_id === currentUserId);
 
   async function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -273,6 +295,60 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Visibility</div>
               <div className="text-gray-800 capitalize">{event.visibility}</div>
             </div>
+
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Participants</div>
+              {participantsLoading && <p className="text-xs text-gray-400">Loading…</p>}
+              {!participantsLoading && participants.length === 0 && (
+                <p className="text-xs text-gray-500 italic">No invitees.</p>
+              )}
+              <ul className="flex flex-col gap-1">
+                {participants.map((p) => (
+                  <li key={p.participant.user_id} className="flex items-center gap-2">
+                    <Avatar user={{ avatarColor: p.profile.avatar_color, initials: p.profile.initials }} size="sm" />
+                    <span className="text-sm text-gray-800 flex-1 truncate">{p.profile.name}</span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                      p.participant.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
+                      p.participant.status === 'declined' ? 'bg-gray-100 text-gray-600' :
+                      p.participant.status === 'maybe' ? 'bg-amber-100 text-amber-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {p.participant.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {!isOwner && myParticipation && myParticipation.participant.status === 'pending' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+                <p className="text-xs font-semibold text-blue-900 mb-2">You've been invited. Respond:</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleRespond('accepted')}
+                    className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 rounded transition-colors"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRespond('maybe')}
+                    className="text-xs font-semibold text-amber-700 border border-amber-300 hover:bg-amber-50 px-2.5 py-1 rounded transition-colors"
+                  >
+                    Maybe
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRespond('declined')}
+                    className="text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            )}
+
             {!isOwner && (
               <p className="text-xs text-gray-500 italic">You can only view this event — it's owned by someone else.</p>
             )}

@@ -3,19 +3,19 @@ import Drawer from '@/components/shared/Drawer';
 import Avatar from '@/components/shared/Avatar';
 import { useCourses } from '@/hooks/useCourses';
 import { useFriends } from '@/hooks/useFriends';
-import { useGroups } from '@/hooks/useGroups';
-import type { Group } from '@/services/groups.service';
+import type { Group, GroupInput } from '@/services/groups.service';
 
 interface CreateGroupModalProps {
   open: boolean;
   onClose: () => void;
+  /** Provided by parent that owns the useGroups instance so sidebar reflects changes. */
+  onCreate: (input: Omit<GroupInput, 'owner_id'>, initialMemberIds: string[]) => Promise<Group>;
   onCreated?: (group: Group) => void;
 }
 
-export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
+export default function CreateGroupModal({ open, onClose, onCreate, onCreated }: CreateGroupModalProps) {
   const { courses } = useCourses();
   const { accepted } = useFriends();
-  const { create } = useGroups();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -44,7 +44,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     setErr(null);
     setSubmitting(true);
     try {
-      const group = await create(
+      const group = await onCreate(
         { name: name.trim(), description: description.trim() || null, course_id: courseId || null },
         Array.from(selectedMembers)
       );

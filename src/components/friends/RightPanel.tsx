@@ -16,7 +16,7 @@ export default function RightPanel() {
 
   const navigate = useNavigate();
   const { accepted, incoming, loading } = useFriends();
-  const { groups, loading: groupsLoading } = useGroups();
+  const { groups, loading: groupsLoading, create: createGroup } = useGroups();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   const lowerSearch = search.toLowerCase();
@@ -152,7 +152,7 @@ export default function RightPanel() {
 
       <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
       <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
-      <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} />
+      <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} onCreate={createGroup} />
     </aside>
   );
 }

@@ -18,7 +18,7 @@ export default function CoursesSidebar() {
   const navigate = useNavigate();
   const profile = useAuthStore((s) => s.profile);
   const reset = useAuthStore((s) => s.reset);
-  const { courses, loading, dropCourse } = useCourses();
+  const { courses, loading, dropCourse, addCourse, addMeeting } = useCourses();
 
   const [addOpen, setAddOpen] = useState(false);
   const [dropTarget, setDropTarget] = useState<EnrolledCourse | null>(null);
@@ -116,7 +116,13 @@ export default function CoursesSidebar() {
         </button>
       </div>
 
-      <AddCourseModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <AddCourseModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        existingCourses={courses}
+        onAddCourse={addCourse}
+        onAddMeeting={addMeeting}
+      />
       <ConfirmDialog
         open={!!dropTarget}
         title="Drop this course?"

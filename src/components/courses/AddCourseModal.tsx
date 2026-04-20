@@ -2,18 +2,22 @@ import { useState, useEffect, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import ClassMeetingsField, { type ClassMeetingDraft } from './ClassMeetingsField';
 import { lookupCourseByCode } from '@/services/courses.service';
-import { useCourses } from '@/hooks/useCourses';
+import type { EnrolledCourse, ClassMeeting, Course } from '@/types/domain';
 
 interface AddCourseModalProps {
   open: boolean;
   onClose: () => void;
+  /** Current enrolled courses — used to prevent duplicate enrollment. */
+  existingCourses: EnrolledCourse[];
+  /** Creates course-or-enrollment. Provided by parent that owns the useCourses instance. */
+  onAddCourse: (input: { code: string; name: string; color: string; instructor: string | null }) => Promise<Course>;
+  /** Adds a class meeting for the newly-added course. */
+  onAddMeeting: (input: { course_id: string; day_of_week: number; start_time: string; end_time: string }) => Promise<ClassMeeting>;
 }
 
 const COLOR_PALETTE = ['#3B5BDB', '#EF4444', '#8B5CF6', '#F97316', '#10B981', '#14B8A6', '#EC4899', '#F59E0B'];
 
-export default function AddCourseModal({ open, onClose }: AddCourseModalProps) {
-  const { addCourse, addMeeting, courses } = useCourses();
-
+export default function AddCourseModal({ open, onClose, existingCourses, onAddCourse, onAddMeeting }: AddCourseModalProps) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [color, setColor] = useState(COLOR_PALETTE[0]);
@@ -74,22 +78,21 @@ export default function AddCourseModal({ open, onClose }: AddCourseModalProps) {
       setErr('Course name is required.');
       return;
     }
-    if (courses.some((c) => c.code === trimmedCode)) {
+    if (existingCourses.some((c) => c.code === trimmedCode)) {
       setErr('You are already enrolled in this course.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const course = await addCourse({
+      const course = await onAddCourse({
         code: trimmedCode,
         name: trimmedName,
         color,
         instructor: instructor.trim() || null,
       });
-      // Add each meeting in sequence (small N, sequential is fine)
       for (const m of meetings) {
-        await addMeeting({
+        await onAddMeeting({
           course_id: course.id,
           day_of_week: m.day_of_week,
           start_time: `${m.start_time}:00`,

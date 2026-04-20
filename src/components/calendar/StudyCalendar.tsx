@@ -20,11 +20,19 @@ function getCourseColor(courseId: string | null, courses: { id: string; color: s
 function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { event } = eventInfo;
   const isClassMeeting = event.extendedProps.kind === 'class_meeting';
+  const isShared = event.extendedProps.kind === 'event' && !event.startEditable;
   return (
     <div className="h-full flex flex-col px-1 py-0.5 overflow-hidden">
-      <span className={`font-bold text-[0.68rem] leading-tight truncate ${isClassMeeting ? 'opacity-70' : ''}`}>
-        {event.title}
-      </span>
+      <div className="flex items-center gap-1">
+        <span className={`font-bold text-[0.68rem] leading-tight truncate ${isClassMeeting ? 'opacity-70' : ''}`}>
+          {event.title}
+        </span>
+        {isShared && (
+          <span className="text-[0.5rem] bg-white/30 rounded px-0.5 leading-tight flex-shrink-0 uppercase font-semibold">
+            shared
+          </span>
+        )}
+      </div>
       <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
     </div>
   );

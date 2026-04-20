@@ -1,0 +1,152 @@
+import { useState, useEffect, type FormEvent } from 'react';
+import Drawer from '@/components/shared/Drawer';
+import Avatar from '@/components/shared/Avatar';
+import { useCourses } from '@/hooks/useCourses';
+import { useFriends } from '@/hooks/useFriends';
+import { useGroups } from '@/hooks/useGroups';
+import type { Group } from '@/services/groups.service';
+
+interface CreateGroupModalProps {
+  open: boolean;
+  onClose: () => void;
+  onCreated?: (group: Group) => void;
+}
+
+export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
+  const { courses } = useCourses();
+  const { accepted } = useFriends();
+  const { create } = useGroups();
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [courseId, setCourseId] = useState<string | ''>('');
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [err, setErr] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setName(''); setDescription(''); setCourseId('');
+      setSelectedMembers(new Set()); setErr(null);
+    }
+  }, [open]);
+
+  function toggleMember(id: string) {
+    setSelectedMembers((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setErr(null);
+    setSubmitting(true);
+    try {
+      const group = await create(
+        { name: name.trim(), description: description.trim() || null, course_id: courseId || null },
+        Array.from(selectedMembers)
+      );
+      onCreated?.(group);
+      onClose();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Failed to create group.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      title="Create a group"
+      footer={
+        <div className="flex gap-2 justify-end">
+          <button type="button" onClick={onClose} className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="create-group-form"
+            disabled={submitting}
+            className="text-sm font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded-md transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {submitting ? 'Creating…' : 'Create group'}
+          </button>
+        </div>
+      }
+    >
+      <form id="create-group-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-gray-700">Name <span className="text-red-500">*</span></span>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. HCI Study Group"
+            autoFocus
+            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-gray-700">Course (optional)</span>
+          <select
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] bg-white"
+          >
+            <option value="">— No course —</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-gray-700">Description (optional)</span>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y"
+          />
+        </label>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-gray-700">Invite friends (optional)</span>
+          {accepted.length === 0 ? (
+            <p className="text-xs text-gray-500">You have no friends yet. You'll be the only member.</p>
+          ) : (
+            <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto border border-gray-100 rounded-md p-1">
+              {accepted.map((f) => {
+                const checked = selectedMembers.has(f.other.id);
+                return (
+                  <li key={f.other.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleMember(f.other.id)}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 transition-colors ${checked ? 'bg-blue-50' : ''}`}
+                    >
+                      <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
+                      <span className="flex-1 text-left text-sm font-medium text-gray-800 truncate">{f.other.name}</span>
+                      <input type="checkbox" checked={checked} onChange={() => {}} className="pointer-events-none" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {err && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">
+            {err}
+          </div>
+        )}
+      </form>
+    </Drawer>
+  );
+}

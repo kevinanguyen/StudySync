@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from '../shared/Avatar';
 import AddFriendModal from './AddFriendModal';
 import FriendRequestsPanel from './FriendRequestsPanel';
+import CreateGroupModal from '../groups/CreateGroupModal';
 import { useFriends } from '@/hooks/useFriends';
+import { useGroups } from '@/hooks/useGroups';
 import { statusConfig } from '@/lib/status';
 
 export default function RightPanel() {
@@ -11,7 +14,10 @@ export default function RightPanel() {
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
 
+  const navigate = useNavigate();
   const { accepted, incoming, loading } = useFriends();
+  const { groups, loading: groupsLoading } = useGroups();
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   const lowerSearch = search.toLowerCase();
   const filteredFriends = accepted.filter((f) =>
@@ -100,19 +106,53 @@ export default function RightPanel() {
           </div>
         </div>
 
-        {/* GROUPS — wired in Task 12 */}
+        {/* GROUPS */}
         <div className="px-3 pt-1 pb-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1">
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Groups</span>
+              <button
+                type="button"
+                onClick={() => setCreateGroupOpen(true)}
+                aria-label="Create group"
+                className="w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200"
+              >
+                +
+              </button>
             </div>
           </div>
-          <p className="text-[11px] text-gray-400 italic">Coming soon.</p>
+
+          {groupsLoading && groups.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+          {!groupsLoading && groups.length === 0 && (
+            <p className="text-[11px] text-gray-500 leading-relaxed">No groups yet. Click <span className="font-semibold">+</span> to create one.</p>
+          )}
+
+          <div className="flex flex-col gap-0.5">
+            {groups.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => navigate(`/groups/${g.id}`)}
+                className="flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors text-left"
+              >
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                  style={{ backgroundColor: g.avatar_color }}
+                >
+                  {g.initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{g.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
       <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
+      <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} />
     </aside>
   );
 }

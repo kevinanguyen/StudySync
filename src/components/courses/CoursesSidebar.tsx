@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth.service';
 import { statusConfig } from '@/lib/status';
 import { useUIStore } from '@/store/uiStore';
+import { CourseRowSkeleton } from '../shared/Skeleton';
 import type { EnrolledCourse } from '@/types/domain';
 
 export default function CoursesSidebar() {
@@ -55,7 +56,13 @@ export default function CoursesSidebar() {
             +
           </button>
         </div>
-        {loading && courses.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+        {loading && courses.length === 0 && (
+          <div className="flex flex-col gap-1.5">
+            <CourseRowSkeleton />
+            <CourseRowSkeleton />
+            <CourseRowSkeleton />
+          </div>
+        )}
         {!loading && courses.length === 0 && (
           <p className="text-[11px] text-gray-500 leading-relaxed">
             No courses yet. Click <span className="font-semibold">+</span> to add one.

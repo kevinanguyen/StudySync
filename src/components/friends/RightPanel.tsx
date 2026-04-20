@@ -9,6 +9,7 @@ import { useFriends } from '@/hooks/useFriends';
 import { useGroups } from '@/hooks/useGroups';
 import { statusConfig } from '@/lib/status';
 import { useUIStore } from '@/store/uiStore';
+import { FriendRowSkeleton } from '../shared/Skeleton';
 import type { FriendshipWithProfile } from '@/services/friends.service';
 
 export default function RightPanel() {
@@ -95,7 +96,13 @@ export default function RightPanel() {
             )}
           </div>
 
-          {loading && accepted.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+          {loading && accepted.length === 0 && (
+            <div className="flex flex-col gap-0.5">
+              <FriendRowSkeleton />
+              <FriendRowSkeleton />
+              <FriendRowSkeleton />
+            </div>
+          )}
           {!loading && accepted.length === 0 && (
             <p className="text-[11px] text-gray-500 leading-relaxed">No friends yet. Click <span className="font-semibold">+</span> to find people.</p>
           )}

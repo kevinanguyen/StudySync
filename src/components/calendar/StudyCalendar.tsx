@@ -212,11 +212,14 @@ export default function StudyCalendar() {
         draft={createDraft}
         onClose={() => setCreateDraft(null)}
         onCreated={async (input) => {
-          await createOne(input);
+          const created = await createOne(input);
           setCreateDraft(null);
+          return { id: created.id };
         }}
         existingEvents={events}
         expandedClassMeetings={expandedMeetings}
+        currentUserCourseIds={courses.map((c) => c.id)}
+        currentUserId={userId}
       />
       <EventDetailsPanel
         event={selectedEvent}

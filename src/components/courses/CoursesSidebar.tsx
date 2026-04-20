@@ -7,6 +7,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth.service';
 import { statusConfig } from '@/lib/status';
+import { useUIStore } from '@/store/uiStore';
 import type { EnrolledCourse } from '@/types/domain';
 
 export default function CoursesSidebar() {
@@ -17,6 +18,7 @@ export default function CoursesSidebar() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [dropTarget, setDropTarget] = useState<EnrolledCourse | null>(null);
+  const showToast = useUIStore((s) => s.showToast);
 
   async function handleLogout() {
     await signOut();
@@ -26,8 +28,12 @@ export default function CoursesSidebar() {
 
   async function handleConfirmDrop() {
     if (!dropTarget) return;
+    const code = dropTarget.code;
     try {
       await dropCourse(dropTarget.id);
+      showToast({ level: 'success', message: `Dropped ${code}` });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to drop course' });
     } finally {
       setDropTarget(null);
     }

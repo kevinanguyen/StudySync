@@ -5,6 +5,7 @@ import Avatar from '@/components/shared/Avatar';
 import { listParticipants, respondToInvite, type ParticipantWithProfile } from '@/services/events.service';
 import type { EventRow, EnrolledCourse, EventVisibility } from '@/types/domain';
 import type { EventInput } from '@/services/events.service';
+import { useUIStore } from '@/store/uiStore';
 
 interface EventDetailsPanelProps {
   event: EventRow | null;
@@ -45,6 +46,7 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   const [submitting, setSubmitting] = useState(false);
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const showToast = useUIStore((s) => s.showToast);
 
   useEffect(() => {
     if (event) {
@@ -77,8 +79,12 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
       await respondToInvite(event.id, currentUserId, response);
       const updated = await listParticipants(event.id);
       setParticipants(updated);
+      const label = response === 'accepted' ? 'Accepted' : response === 'declined' ? 'Declined' : 'Marked as maybe';
+      showToast({ level: 'success', message: label });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to respond.');
+      const msg = e instanceof Error ? e.message : 'Failed to respond.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     }
   }
 
@@ -102,9 +108,12 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
         description: description.trim() || null,
         visibility,
       });
+      showToast({ level: 'success', message: 'Event updated' });
       setEditing(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to update.');
+      const msg = e instanceof Error ? e.message : 'Failed to update.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSubmitting(false);
     }
@@ -114,8 +123,11 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
     setConfirmDelete(false);
     try {
       await onDelete();
+      showToast({ level: 'success', message: 'Event deleted' });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to delete.');
+      const msg = e instanceof Error ? e.message : 'Failed to delete.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     }
   }
 

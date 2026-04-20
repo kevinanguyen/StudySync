@@ -33,13 +33,15 @@ StudySync solves the problem of disorganized study coordination. Instead of text
 
 ## Current Features
 
-- Email/password authentication (Supabase)
-- Protected dashboard with session persistence
-- Weekly calendar (FullCalendar) with drag/resize (mock data, to be persisted in next plan)
-- Course sidebar with color-coded courses
-- Right-sidebar with friends and groups
+- Email/password authentication (Supabase) with session persistence
+- Protected dashboard with TypeScript + React Router + Zustand
+- **Courses management**: globally shared courses, per-user enrollment metadata (color, instructor, class meetings), case-insensitive code lookup, add/drop flow with confirmation
+- **Class meetings**: recurring weekly schedule rendered as non-editable background blocks on the calendar
+- **Persistent weekly calendar** (FullCalendar) with events saved to Supabase, drag/resize with optimistic updates and revert-on-error
+- **Create event drawer**: title, course, date, start/end time, location, description, visibility (private / friends-in-same-course)
+- **Event details panel**: view, edit, delete your events; read-only view for others' events
+- **Availability engine**: pure-function conflict detection (`lib/availability.ts`) with unit tests; wired into create drawer as an amber conflict warning
 - Profile status indicator (Discord-style avatar dot)
-- Automatic profile row creation on signup (via Postgres trigger)
 
 ---
 

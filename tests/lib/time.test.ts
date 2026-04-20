@@ -7,6 +7,7 @@ import {
   dateToIso,
   minutesBetween,
   addMinutes,
+  expandClassMeetings,
 } from '@/lib/time';
 
 describe('startOfWeek', () => {
@@ -119,5 +120,55 @@ describe('addMinutes', () => {
     const result = addMinutes(start, -30);
     expect(result.getHours()).toBe(9);
     expect(result.getMinutes()).toBe(30);
+  });
+});
+
+describe('expandClassMeetings', () => {
+  it('expands a Monday meeting into the correct date in a given week', () => {
+    const weekStart = new Date('2026-04-20T00:00:00'); // Monday
+    const meetings = [{
+      id: 'm1',
+      user_id: 'u1',
+      course_id: 'c1',
+      day_of_week: 1,
+      start_time: '09:00:00',
+      end_time: '10:30:00',
+    }];
+    const expanded = expandClassMeetings(meetings, weekStart);
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0].start_at.getDay()).toBe(1);
+    expect(expanded[0].start_at.getHours()).toBe(9);
+    expect(expanded[0].start_at.getMinutes()).toBe(0);
+    expect(expanded[0].end_at.getHours()).toBe(10);
+    expect(expanded[0].end_at.getMinutes()).toBe(30);
+    expect(expanded[0].start_at.getDate()).toBe(20);
+  });
+
+  it('expands a Sunday meeting into the Sunday of the Monday-anchored week', () => {
+    const weekStart = new Date('2026-04-20T00:00:00');
+    const meetings = [{
+      id: 'm2',
+      user_id: 'u1',
+      course_id: 'c1',
+      day_of_week: 0,
+      start_time: '14:00:00',
+      end_time: '15:00:00',
+    }];
+    const expanded = expandClassMeetings(meetings, weekStart);
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0].start_at.getDay()).toBe(0);
+    expect(expanded[0].start_at.getDate()).toBe(26);
+  });
+
+  it('expands multiple meetings across days', () => {
+    const weekStart = new Date('2026-04-20T00:00:00');
+    const meetings = [
+      { id: 'a', user_id: 'u1', course_id: 'c1', day_of_week: 1, start_time: '09:00:00', end_time: '10:00:00' },
+      { id: 'b', user_id: 'u1', course_id: 'c1', day_of_week: 3, start_time: '11:00:00', end_time: '12:00:00' },
+      { id: 'c', user_id: 'u1', course_id: 'c1', day_of_week: 5, start_time: '13:00:00', end_time: '14:30:00' },
+    ];
+    const expanded = expandClassMeetings(meetings, weekStart);
+    expect(expanded).toHaveLength(3);
+    expect(expanded.map((e) => e.start_at.getDay())).toEqual([1, 3, 5]);
   });
 });

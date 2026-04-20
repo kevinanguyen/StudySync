@@ -7,6 +7,8 @@ import { useCourses } from '@/hooks/useCourses';
 import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth.service';
 import { statusConfig } from '@/lib/status';
+import { useUIStore } from '@/store/uiStore';
+import { CourseRowSkeleton } from '../shared/Skeleton';
 import type { EnrolledCourse } from '@/types/domain';
 
 export default function CoursesSidebar() {
@@ -17,6 +19,7 @@ export default function CoursesSidebar() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [dropTarget, setDropTarget] = useState<EnrolledCourse | null>(null);
+  const showToast = useUIStore((s) => s.showToast);
 
   async function handleLogout() {
     await signOut();
@@ -26,8 +29,12 @@ export default function CoursesSidebar() {
 
   async function handleConfirmDrop() {
     if (!dropTarget) return;
+    const code = dropTarget.code;
     try {
       await dropCourse(dropTarget.id);
+      showToast({ level: 'success', message: `Dropped ${code}` });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to drop course' });
     } finally {
       setDropTarget(null);
     }
@@ -49,7 +56,13 @@ export default function CoursesSidebar() {
             +
           </button>
         </div>
-        {loading && courses.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+        {loading && courses.length === 0 && (
+          <div className="flex flex-col gap-1.5">
+            <CourseRowSkeleton />
+            <CourseRowSkeleton />
+            <CourseRowSkeleton />
+          </div>
+        )}
         {!loading && courses.length === 0 && (
           <p className="text-[11px] text-gray-500 leading-relaxed">
             No courses yet. Click <span className="font-semibold">+</span> to add one.
@@ -99,16 +112,29 @@ export default function CoursesSidebar() {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-gray-400 hover:text-red-500 transition-colors p-1 flex-shrink-0"
-          aria-label="Log out"
-          title="Log out"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <button
+            onClick={() => navigate('/settings')}
+            className="text-gray-400 hover:text-gray-700 transition-colors p-1"
+            aria-label="Settings"
+            title="Settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+            aria-label="Log out"
+            title="Log out"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <AddCourseModal

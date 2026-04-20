@@ -4,9 +4,13 @@ import Avatar from '../shared/Avatar';
 import AddFriendModal from './AddFriendModal';
 import FriendRequestsPanel from './FriendRequestsPanel';
 import CreateGroupModal from '../groups/CreateGroupModal';
+import ConfirmDialog from '../shared/ConfirmDialog';
 import { useFriends } from '@/hooks/useFriends';
 import { useGroups } from '@/hooks/useGroups';
 import { statusConfig } from '@/lib/status';
+import { useUIStore } from '@/store/uiStore';
+import { FriendRowSkeleton } from '../shared/Skeleton';
+import type { FriendshipWithProfile } from '@/services/friends.service';
 
 export default function RightPanel() {
   const [search, setSearch] = useState('');
@@ -15,9 +19,24 @@ export default function RightPanel() {
   const [requestsOpen, setRequestsOpen] = useState(false);
 
   const navigate = useNavigate();
-  const { accepted, incoming, loading } = useFriends();
+  const { accepted, incoming, loading, remove: removeFriend } = useFriends();
   const { groups, loading: groupsLoading, create: createGroup } = useGroups();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const showToast = useUIStore((s) => s.showToast);
+  const [unfriendTarget, setUnfriendTarget] = useState<FriendshipWithProfile | null>(null);
+
+  async function handleConfirmUnfriend() {
+    if (!unfriendTarget) return;
+    const name = unfriendTarget.other.name;
+    try {
+      await removeFriend(unfriendTarget.other.id);
+      showToast({ level: 'info', message: `Unfriended ${name}` });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to unfriend' });
+    } finally {
+      setUnfriendTarget(null);
+    }
+  }
 
   const lowerSearch = search.toLowerCase();
   const filteredFriends = accepted.filter((f) =>
@@ -77,7 +96,13 @@ export default function RightPanel() {
             )}
           </div>
 
-          {loading && accepted.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+          {loading && accepted.length === 0 && (
+            <div className="flex flex-col gap-0.5">
+              <FriendRowSkeleton />
+              <FriendRowSkeleton />
+              <FriendRowSkeleton />
+            </div>
+          )}
           {!loading && accepted.length === 0 && (
             <p className="text-[11px] text-gray-500 leading-relaxed">No friends yet. Click <span className="font-semibold">+</span> to find people.</p>
           )}
@@ -86,7 +111,7 @@ export default function RightPanel() {
             {displayedFriends.map((f) => {
               const cfg = statusConfig[f.other.status];
               return (
-                <div key={f.other.id} className="flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
+                <div key={f.other.id} className="group relative flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-gray-50 transition-colors">
                   <div className="relative flex-shrink-0">
                     <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
                     <span
@@ -94,12 +119,22 @@ export default function RightPanel() {
                       style={{ backgroundColor: cfg.color }}
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{f.other.name}</p>
                     <p className="text-[10px] truncate" style={{ color: cfg.color }}>
                       {f.other.status_text ?? cfg.label}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setUnfriendTarget(f)}
+                    aria-label={`Unfriend ${f.other.name}`}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 px-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               );
             })}
@@ -153,6 +188,15 @@ export default function RightPanel() {
       <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
       <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
       <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} onCreate={createGroup} />
+      <ConfirmDialog
+        open={!!unfriendTarget}
+        title="Unfriend this person?"
+        message={unfriendTarget ? `You'll no longer see ${unfriendTarget.other.name}'s shared study blocks. You can send a new friend request anytime.` : ''}
+        confirmLabel="Unfriend"
+        destructive
+        onConfirm={handleConfirmUnfriend}
+        onCancel={() => setUnfriendTarget(null)}
+      />
     </aside>
   );
 }

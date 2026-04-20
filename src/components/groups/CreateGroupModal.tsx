@@ -3,6 +3,7 @@ import Drawer from '@/components/shared/Drawer';
 import Avatar from '@/components/shared/Avatar';
 import { useCourses } from '@/hooks/useCourses';
 import { useFriends } from '@/hooks/useFriends';
+import { useUIStore } from '@/store/uiStore';
 import type { Group, GroupInput } from '@/services/groups.service';
 
 interface CreateGroupModalProps {
@@ -23,6 +24,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const showToast = useUIStore((s) => s.showToast);
 
   useEffect(() => {
     if (open) {
@@ -48,10 +50,13 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
         { name: name.trim(), description: description.trim() || null, course_id: courseId || null },
         Array.from(selectedMembers)
       );
+      showToast({ level: 'success', message: `Group "${group.name}" created` });
       onCreated?.(group);
       onClose();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to create group.');
+      const msg = e instanceof Error ? e.message : 'Failed to create group.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSubmitting(false);
     }

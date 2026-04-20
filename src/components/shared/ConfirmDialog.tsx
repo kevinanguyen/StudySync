@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -22,6 +23,8 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -43,7 +46,7 @@ export default function ConfirmDialog({
         aria-label="Close dialog"
         className="absolute inset-0 bg-black/40 cursor-default"
       />
-      <div className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5">
+      <div ref={panelRef} className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5">
         <h3 id="confirm-title" className="text-base font-bold text-gray-800 mb-1">
           {title}
         </h3>

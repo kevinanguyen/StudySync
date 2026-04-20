@@ -1,6 +1,7 @@
 import Drawer from '@/components/shared/Drawer';
 import Avatar from '@/components/shared/Avatar';
 import { useFriends } from '@/hooks/useFriends';
+import { useUIStore } from '@/store/uiStore';
 
 interface FriendRequestsPanelProps {
   open: boolean;
@@ -9,6 +10,34 @@ interface FriendRequestsPanelProps {
 
 export default function FriendRequestsPanel({ open, onClose }: FriendRequestsPanelProps) {
   const { incoming, outgoing, accept, remove, loading } = useFriends();
+  const showToast = useUIStore((s) => s.showToast);
+
+  async function handleAccept(userId: string, name: string) {
+    try {
+      await accept(userId);
+      showToast({ level: 'success', message: `You are now friends with ${name}` });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to accept' });
+    }
+  }
+
+  async function handleDecline(userId: string) {
+    try {
+      await remove(userId);
+      showToast({ level: 'info', message: 'Request declined' });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to decline' });
+    }
+  }
+
+  async function handleCancel(userId: string) {
+    try {
+      await remove(userId);
+      showToast({ level: 'info', message: 'Request cancelled' });
+    } catch (e) {
+      showToast({ level: 'error', message: e instanceof Error ? e.message : 'Failed to cancel' });
+    }
+  }
 
   return (
     <Drawer open={open} onClose={onClose} title="Friend requests">
@@ -30,14 +59,14 @@ export default function FriendRequestsPanel({ open, onClose }: FriendRequestsPan
                 <div className="flex gap-1.5">
                   <button
                     type="button"
-                    onClick={() => accept(f.other.id)}
+                    onClick={() => handleAccept(f.other.id, f.other.name)}
                     className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 rounded transition-colors"
                   >
                     Accept
                   </button>
                   <button
                     type="button"
-                    onClick={() => remove(f.other.id)}
+                    onClick={() => handleDecline(f.other.id)}
                     className="text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors"
                   >
                     Decline
@@ -63,7 +92,7 @@ export default function FriendRequestsPanel({ open, onClose }: FriendRequestsPan
                 </div>
                 <button
                   type="button"
-                  onClick={() => remove(f.other.id)}
+                  onClick={() => handleCancel(f.other.id)}
                   className="text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors"
                 >
                   Cancel

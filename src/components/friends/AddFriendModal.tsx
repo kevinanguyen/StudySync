@@ -4,6 +4,7 @@ import Avatar from '@/components/shared/Avatar';
 import { searchProfiles, type Profile } from '@/services/friends.service';
 import { useAuthStore } from '@/store/authStore';
 import { useFriends } from '@/hooks/useFriends';
+import { useUIStore } from '@/store/uiStore';
 
 interface AddFriendModalProps {
   open: boolean;
@@ -19,6 +20,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
   const [searching, setSearching] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [sending, setSending] = useState<string | null>(null);
+  const showToast = useUIStore((s) => s.showToast);
 
   useEffect(() => {
     if (open) { setQuery(''); setResults([]); setErr(null); }
@@ -47,8 +49,11 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
     setErr(null);
     try {
       await sendRequest(otherId);
+      showToast({ level: 'success', message: 'Friend request sent' });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to send request');
+      const msg = e instanceof Error ? e.message : 'Failed to send request';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSending(null);
     }

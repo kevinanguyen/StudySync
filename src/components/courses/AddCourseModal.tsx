@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import ClassMeetingsField, { type ClassMeetingDraft } from './ClassMeetingsField';
 import { lookupCourseByCode } from '@/services/courses.service';
+import { useUIStore } from '@/store/uiStore';
 import type { EnrolledCourse, ClassMeeting, Course } from '@/types/domain';
 
 interface AddCourseModalProps {
@@ -26,6 +27,7 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
   const [lookupResult, setLookupResult] = useState<'idle' | 'searching' | 'exists' | 'new'>('idle');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const showToast = useUIStore((s) => s.showToast);
 
   // Reset on open
   useEffect(() => {
@@ -99,9 +101,12 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
           end_time: `${m.end_time}:00`,
         });
       }
+      showToast({ level: 'success', message: `Added ${trimmedCode}` });
       onClose();
     } catch (error) {
-      setErr(error instanceof Error ? error.message : 'Failed to add course.');
+      const msg = error instanceof Error ? error.message : 'Failed to add course.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSubmitting(false);
     }

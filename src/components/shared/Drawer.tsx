@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface DrawerProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface DrawerProps {
 
 export default function Drawer({ open, onClose, title, children, footer, width = 420 }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, open);
 
   useEffect(() => {
     if (!open) return;

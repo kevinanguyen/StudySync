@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import GroupMembersList from '@/components/groups/GroupMembersList';
 import GroupChat from '@/components/groups/GroupChat';
+import UpcomingSessionsCard from '@/components/groups/UpcomingSessionsCard';
 import { getGroup, type Group } from '@/services/groups.service';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuthStore } from '@/store/authStore';
@@ -123,6 +124,10 @@ export default function GroupPage() {
         <main className="flex flex-col flex-1 min-w-0 bg-white">
           <GroupChat groupId={groupId} />
         </main>
+
+        <aside className="hidden lg:flex flex-col bg-gray-50 border-l border-gray-200 p-4 gap-4 overflow-y-auto" style={{ width: '280px', minWidth: '280px' }}>
+          <UpcomingSessionsCard groupId={groupId} />
+        </aside>
       </div>
 
       <ConfirmDialog

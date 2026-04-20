@@ -8,6 +8,7 @@ import type { EventInput } from '@/services/events.service';
 import { useFriends } from '@/hooks/useFriends';
 import { useGroups } from '@/hooks/useGroups';
 import { inviteParticipant, selfJoinEvent } from '@/services/events.service';
+import { useUIStore } from '@/store/uiStore';
 import InviteePicker from './InviteePicker';
 
 interface CreateEventDrawerProps {
@@ -65,6 +66,7 @@ export default function CreateEventDrawer({
   const [groupId, setGroupId] = useState<string | ''>('');
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const showToast = useUIStore((s) => s.showToast);
 
   // Seed form when draft changes
   useEffect(() => {
@@ -115,9 +117,12 @@ export default function CreateEventDrawer({
     setErr(null);
     try {
       await selfJoinEvent(joinable.id, userId);
+      showToast({ level: 'success', message: `Joined "${joinable.title}"` });
       onClose();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to join.');
+      const msg = e instanceof Error ? e.message : 'Failed to join.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSubmitting(false);
     }
@@ -158,8 +163,12 @@ export default function CreateEventDrawer({
       for (const inviteeId of inviteeIds) {
         await inviteParticipant(created.id, inviteeId);
       }
+      const invited = inviteeIds.size > 0 ? ` · ${inviteeIds.size} invited` : '';
+      showToast({ level: 'success', message: `Event created${invited}` });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to create event.');
+      const msg = e instanceof Error ? e.message : 'Failed to create event.';
+      setErr(msg);
+      showToast({ level: 'error', message: msg });
     } finally {
       setSubmitting(false);
     }

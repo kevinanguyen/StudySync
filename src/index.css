@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* FullCalendar overrides */
+.fc {
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+.fc .fc-toolbar {
+  display: none !important;
+}
+
+.fc .fc-scrollgrid {
+  border: none !important;
+}
+
+.fc .fc-col-header-cell {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 6px 0;
+}
+
+.fc .fc-col-header-cell.fc-day-today {
+  background: #ebf0ff;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: #3B5BDB;
+}
+
+.fc .fc-timegrid-slot {
+  height: 2.5rem;
+  border-color: #f1f5f9 !important;
+}
+
+.fc .fc-timegrid-slot-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  vertical-align: top;
+  padding-right: 6px;
+}
+
+.fc .fc-timegrid-axis {
+  border: none !important;
+}
+
+.fc .fc-timegrid-col.fc-day-today {
+  background: rgba(235, 240, 255, 0.3) !important;
+}
+
+.fc .fc-event {
+  border-radius: 4px;
+  border: none;
+  font-size: 0.7rem;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.fc .fc-event-main {
+  padding: 2px 5px;
+}
+
+.fc .fc-event-title {
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.fc .fc-event-time {
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.fc .fc-scrollgrid-section > td {
+  border: none !important;
+}
+
+.fc .fc-scrollgrid-sync-table {
+  border: none;
+}
+
+.fc td, .fc th {
+  border-color: #e2e8f0 !important;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #3B5BDB;
+  border-width: 2px;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: #3B5BDB;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  margin-top: -5px;
+}
+
+.fc .fc-highlight {
+  background: rgba(59, 91, 219, 0.15);
+}
+
+.fc .fc-event:hover {
+  filter: brightness(0.95);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}

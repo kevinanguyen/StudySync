@@ -1,19 +1,34 @@
 import { statusConfig } from '../../data/users';
 
-export default function Avatar({ user, size = 'md', showStatus = false, className = '' }) {
-  const sizes = {
+type Size = 'sm' | 'md' | 'lg';
+
+interface AvatarUser {
+  avatarColor?: string;
+  initials?: string;
+  status?: string;
+}
+
+interface AvatarProps {
+  user?: AvatarUser | null;
+  size?: Size;
+  showStatus?: boolean;
+  className?: string;
+}
+
+export default function Avatar({ user, size = 'md', showStatus = false, className = '' }: AvatarProps) {
+  const sizes: Record<Size, string> = {
     sm: 'w-7 h-7 text-xs',
     md: 'w-9 h-9 text-sm',
     lg: 'w-11 h-11 text-base',
   };
 
-  const dotSizes = {
+  const dotSizes: Record<Size, string> = {
     sm: 'w-2 h-2 border',
     md: 'w-2.5 h-2.5 border-2',
     lg: 'w-3 h-3 border-2',
   };
 
-  const status = user?.status && statusConfig[user.status];
+  const status = user?.status ? statusConfig[user.status as keyof typeof statusConfig] : null;
 
   return (
     <div className={`relative flex-shrink-0 ${className}`}>

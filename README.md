@@ -35,12 +35,14 @@ StudySync solves the problem of disorganized study coordination. Instead of text
 
 - Email/password authentication (Supabase) with session persistence
 - Protected dashboard with TypeScript + React Router + Zustand
-- **Courses management**: globally shared courses, per-user enrollment metadata (color, instructor, class meetings), case-insensitive code lookup, add/drop flow with confirmation
-- **Class meetings**: recurring weekly schedule rendered as non-editable background blocks on the calendar
-- **Persistent weekly calendar** (FullCalendar) with events saved to Supabase, drag/resize with optimistic updates and revert-on-error
-- **Create event drawer**: title, course, date, start/end time, location, description, visibility (private / friends-in-same-course)
-- **Event details panel**: view, edit, delete your events; read-only view for others' events
-- **Availability engine**: pure-function conflict detection (`lib/availability.ts`) with unit tests; wired into create drawer as an amber conflict warning
+- **Courses**: globally shared courses, per-user enrollment metadata, case-insensitive code lookup, add/drop flow, class meetings rendered as background blocks on the calendar
+- **Persistent weekly calendar** (FullCalendar): drag/resize events with optimistic updates and revert-on-error; "Shared" badge for events owned by others
+- **Event creation drawer**: title, course, date/time, location, description, visibility (private / friends-in-course / group), friend multi-select with inline availability ("Available" ✓ / "Busy — [conflict]" ●), group picker
+- **Event details panel**: view, edit, delete (owner); accept/decline/maybe for invited users; participant list with status chips
+- **Availability engine**: pure-function conflict detection with full unit tests; wired into the create drawer as self-conflict warning + per-friend availability + collision-join-suggestion banner ("Someone already has this slot — join instead?")
+- **Friends**: profile search by username/email, friend requests with accept/decline, friend list with availability status, pending-request badge
+- **Groups**: create groups with optional course + description, invite friends on creation, group page at `/groups/:id` with member list and delete flow
+- **Realtime group chat**: Supabase Postgres Changes subscription; instant message delivery across members; Enter-to-send composer
 - Profile status indicator (Discord-style avatar dot)
 
 ---

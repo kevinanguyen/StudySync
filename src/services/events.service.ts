@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { EventRow, EventVisibility } from '@/types/domain';
+import type { Tables } from '@/types/db';
 
 export class EventsServiceError extends Error {
   constructor(message: string, public cause?: unknown) {
@@ -78,5 +79,76 @@ export async function updateEvent(id: string, patch: Partial<Omit<EventInput, 'o
 
 export async function deleteEvent(id: string): Promise<void> {
   const { error } = await supabase.from('events').delete().eq('id', id);
+  if (error) throw new EventsServiceError(error.message, error);
+}
+
+export type EventParticipantRow = Tables<'event_participants'>;
+
+export interface ParticipantWithProfile {
+  participant: EventParticipantRow;
+  profile: Tables<'profiles'>;
+}
+
+/** Invite a user to an event (creator action). Creates a pending participation row. */
+export async function inviteParticipant(eventId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('event_participants').insert({
+    event_id: eventId,
+    user_id: userId,
+    status: 'pending',
+  });
+  if (error) throw new EventsServiceError(error.message, error);
+}
+
+/** Remove a participant (creator action or self-leave). */
+export async function removeParticipant(eventId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('event_participants')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+  if (error) throw new EventsServiceError(error.message, error);
+}
+
+/** Respond to an invite (self action). Sets responded_at. */
+export async function respondToInvite(
+  eventId: string,
+  userId: string,
+  response: 'accepted' | 'declined' | 'maybe'
+): Promise<void> {
+  const { error } = await supabase
+    .from('event_participants')
+    .update({ status: response, responded_at: new Date().toISOString() })
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+  if (error) throw new EventsServiceError(error.message, error);
+}
+
+/** List participants for an event (creator view). Joined with profile. */
+export async function listParticipants(eventId: string): Promise<ParticipantWithProfile[]> {
+  const { data, error } = await supabase
+    .from('event_participants')
+    .select('*, profiles(*)')
+    .eq('event_id', eventId);
+  if (error) throw new EventsServiceError(error.message, error);
+  return (data ?? []).map((row) => ({
+    participant: {
+      event_id: row.event_id,
+      user_id: row.user_id,
+      status: row.status,
+      invited_at: row.invited_at,
+      responded_at: row.responded_at,
+    },
+    profile: row.profiles as unknown as Tables<'profiles'>,
+  }));
+}
+
+/** Self-join: add current user to an event as accepted (used by collision-join-suggestion). */
+export async function selfJoinEvent(eventId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('event_participants').insert({
+    event_id: eventId,
+    user_id: userId,
+    status: 'accepted',
+    responded_at: new Date().toISOString(),
+  });
   if (error) throw new EventsServiceError(error.message, error);
 }

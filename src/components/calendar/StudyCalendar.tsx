@@ -1,172 +1,136 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
-import type { EventContentArg, DatesSetArg, DateSelectArg, EventDropArg } from '@fullcalendar/core';
+import type { EventContentArg, DatesSetArg, DateSelectArg, EventDropArg, EventClickArg } from '@fullcalendar/core';
 import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { getCourse } from '../../data/courses';
-import { FRIENDS } from '../../data/users';
-import { INITIAL_STUDY_BLOCKS } from '../../data/studyBlocks';
-import CreateBlockModal from '../shared/CreateBlockModal';
+import { startOfWeek, endOfWeek, expandClassMeetings } from '@/lib/time';
+import { useEvents } from '@/hooks/useEvents';
+import { useCourses } from '@/hooks/useCourses';
+import { useAuthStore } from '@/store/authStore';
+import CreateEventDrawer from './CreateEventDrawer';
+import EventDetailsPanel from './EventDetailsPanel';
+import type { EventRow } from '@/types/domain';
 
-interface Block {
-  id: string;
-  courseId: string;
-  title: string;
-  start: string;
-  end: string;
-  ownerId: string;
-  participants: string[];
-  editable: boolean;
-}
-
-interface ModalState {
-  position: { x: number; y: number };
-  timeInfo: {
-    startStr: string;
-    endStr: string;
-    start: Date;
-    end: Date;
-  };
-}
-
-let blockCounter = 100;
-
-function toFCEvents(blocks: Block[]) {
-  return blocks.map((block) => {
-    const course = getCourse(block.courseId);
-    return {
-      id: block.id,
-      title: block.title,
-      start: block.start,
-      end: block.end,
-      backgroundColor: course?.color || '#6B7280',
-      borderColor: 'transparent',
-      textColor: '#ffffff',
-      editable: block.editable !== false,
-      extendedProps: {
-        courseId: block.courseId,
-        ownerId: block.ownerId,
-        participants: block.participants || [],
-        editable: block.editable !== false,
-      },
-    };
-  });
-}
-
-interface ParticipantAvatarsProps {
-  participants: string[];
-}
-
-function ParticipantAvatars({ participants }: ParticipantAvatarsProps) {
-  const friends = FRIENDS.filter((f: { id: string }) => participants.includes(f.id));
-  if (friends.length === 0) return null;
-  return (
-    <div className="flex gap-0.5 mt-0.5 flex-wrap">
-      {friends.map((f: { id: string; avatarColor: string; initials: string; name: string }) => (
-        <div
-          key={f.id}
-          className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold border border-white/60"
-          style={{ backgroundColor: f.avatarColor }}
-          title={f.name}
-        >
-          {f.initials}
-        </div>
-      ))}
-    </div>
-  );
+function getCourseColor(courseId: string | null, courses: { id: string; color: string }[]): string {
+  if (!courseId) return '#6B7280';
+  return courses.find((c) => c.id === courseId)?.color ?? '#6B7280';
 }
 
 function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { event } = eventInfo;
-  const { participants, editable } = event.extendedProps as { participants: string[]; editable: boolean };
-  const isOwned = editable !== false;
-
+  const isClassMeeting = event.extendedProps.kind === 'class_meeting';
   return (
     <div className="h-full flex flex-col px-1 py-0.5 overflow-hidden">
-      <span className="font-bold text-[0.68rem] leading-tight truncate">{event.title}</span>
-      <div className="flex items-center gap-0.5">
-        <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
-        {!isOwned && (
-          <span className="text-[0.5rem] bg-white/30 rounded px-0.5 leading-tight flex-shrink-0">shared</span>
-        )}
-      </div>
-      {participants && participants.length > 0 && <ParticipantAvatars participants={participants} />}
+      <span className={`font-bold text-[0.68rem] leading-tight truncate ${isClassMeeting ? 'opacity-70' : ''}`}>
+        {event.title}
+      </span>
+      <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
     </div>
   );
 }
 
+interface CreateDraft {
+  start: Date;
+  end: Date;
+}
+
 export default function StudyCalendar() {
   const calRef = useRef<FullCalendar>(null);
-  const [blocks, setBlocks] = useState<Block[]>(INITIAL_STUDY_BLOCKS as Block[]);
-  const [modal, setModal] = useState<ModalState | null>(null);
+  const [anchorDate, setAnchorDate] = useState<Date>(() => new Date());
   const [weekRange, setWeekRange] = useState('');
+  const [createDraft, setCreateDraft] = useState<CreateDraft | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventRow | null>(null);
 
-  const fcEvents = toFCEvents(blocks);
+  const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate]);
+  const weekEnd = useMemo(() => endOfWeek(anchorDate), [anchorDate]);
 
-  function getModalPosition(jsEvent: MouseEvent | null) {
-    if (jsEvent) {
-      return {
-        x: Math.min(jsEvent.clientX + 10, window.innerWidth - 250),
-        y: Math.min(jsEvent.clientY - 20, window.innerHeight - 320),
-      };
-    }
-    const rect = document.querySelector('.fc-timegrid-body')?.getBoundingClientRect();
-    return { x: (rect?.left || 300) + 100, y: (rect?.top || 200) + 80 };
-  }
+  const { events, createOne, updateOne, patchLocal, deleteOne } = useEvents(weekStart, weekEnd);
+  const { courses, classMeetings } = useCourses();
 
-  function handleDateSelect(selectInfo: DateSelectArg) {
-    setModal({
-      position: getModalPosition(selectInfo.jsEvent as MouseEvent | null),
-      timeInfo: {
-        startStr: selectInfo.startStr,
-        endStr: selectInfo.endStr,
-        start: selectInfo.start,
-        end: selectInfo.end,
-      },
-    });
-    selectInfo.view.calendar.unselect();
-  }
+  const userId = useAuthStore((s) => s.session?.user.id ?? null);
 
-  function handleModalConfirm(course: { id: string; code: string }) {
-    if (!modal?.timeInfo) return;
-    const newBlock: Block = {
-      id: `block-new-${++blockCounter}`,
-      courseId: course.id,
-      title: course.code,
-      start: modal.timeInfo.startStr,
-      end: modal.timeInfo.endStr,
-      ownerId: 'user-dasanie',
-      participants: ['user-dasanie'],
-      editable: true,
-    };
-    setBlocks((prev) => [...prev, newBlock]);
-    setModal(null);
-  }
+  const expandedMeetings = useMemo(() => expandClassMeetings(classMeetings, weekStart), [classMeetings, weekStart]);
 
-  function handleEventResize(info: EventResizeDoneArg) {
-    const { event } = info;
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === event.id ? { ...b, start: event.startStr, end: event.endStr } : b))
-    );
-  }
+  const fcEvents = useMemo(() => {
+    const eventItems = events.map((e) => ({
+      id: `event:${e.id}`,
+      title: e.title,
+      start: e.start_at,
+      end: e.end_at,
+      backgroundColor: getCourseColor(e.course_id, courses),
+      borderColor: 'transparent',
+      textColor: '#ffffff',
+      editable: e.owner_id === userId,
+      extendedProps: { kind: 'event', source: e },
+    }));
+    const meetingItems = expandedMeetings.map((m) => ({
+      id: `meeting:${m.id}`,
+      title: courses.find((c) => c.id === m.course_id)?.code ?? 'Class',
+      start: m.start_at,
+      end: m.end_at,
+      backgroundColor: getCourseColor(m.course_id, courses),
+      borderColor: 'transparent',
+      textColor: '#ffffff',
+      editable: false,
+      display: 'background' as const,
+      extendedProps: { kind: 'class_meeting' },
+    }));
+    return [...eventItems, ...meetingItems];
+  }, [events, expandedMeetings, courses, userId]);
 
-  function handleEventDrop(info: EventDropArg) {
-    const { event } = info;
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === event.id ? { ...b, start: event.startStr, end: event.endStr } : b))
-    );
-  }
+  const handleDateSelect = useCallback((info: DateSelectArg) => {
+    setCreateDraft({ start: info.start, end: info.end });
+    info.view.calendar.unselect();
+  }, []);
 
-  function handleDatesSet(dateInfo: DatesSetArg) {
+  const handleEventClick = useCallback((info: EventClickArg) => {
+    const source = info.event.extendedProps.source as EventRow | undefined;
+    if (source) setSelectedEvent(source);
+  }, []);
+
+  const handleEventResize = useCallback(
+    async (info: EventResizeDoneArg) => {
+      const ev = info.event;
+      const source = ev.extendedProps.source as EventRow | undefined;
+      if (!source) return;
+      const rollback = patchLocal(source.id, { start_at: ev.startStr, end_at: ev.endStr });
+      try {
+        await updateOne(source.id, { start_at: ev.startStr, end_at: ev.endStr });
+      } catch {
+        rollback();
+        info.revert();
+      }
+    },
+    [patchLocal, updateOne]
+  );
+
+  const handleEventDrop = useCallback(
+    async (info: EventDropArg) => {
+      const ev = info.event;
+      const source = ev.extendedProps.source as EventRow | undefined;
+      if (!source) return;
+      const rollback = patchLocal(source.id, { start_at: ev.startStr, end_at: ev.endStr });
+      try {
+        await updateOne(source.id, { start_at: ev.startStr, end_at: ev.endStr });
+      } catch {
+        rollback();
+        info.revert();
+      }
+    },
+    [patchLocal, updateOne]
+  );
+
+  const handleDatesSet = useCallback((dateInfo: DatesSetArg) => {
     const start = dateInfo.start;
-    const end = new Date(dateInfo.end);
-    end.setDate(end.getDate() - 1);
+    const endDate = new Date(dateInfo.end);
+    endDate.setDate(endDate.getDate() - 1);
     const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
     const startStr = start.toLocaleDateString('en-US', opts);
-    const endStr = end.toLocaleDateString('en-US', { ...opts, year: 'numeric' });
+    const endStr = endDate.toLocaleDateString('en-US', { ...opts, year: 'numeric' });
     setWeekRange(`${startStr} – ${endStr}`);
-  }
+    setAnchorDate(start);
+  }, []);
 
   function navPrev() { calRef.current?.getApi().prev(); }
   function navNext() { calRef.current?.getApi().next(); }
@@ -187,7 +151,17 @@ export default function StudyCalendar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
-        <button onClick={navToday} className="ml-auto text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium">
+        <button
+          type="button"
+          onClick={() => setCreateDraft({ start: new Date(), end: new Date(Date.now() + 60 * 60 * 1000) })}
+          className="ml-auto text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors"
+        >
+          + New Event
+        </button>
+        <button
+          onClick={navToday}
+          className="text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium"
+        >
           Today
         </button>
       </div>
@@ -205,19 +179,20 @@ export default function StudyCalendar() {
           slotLabelInterval="01:00:00"
           slotLabelFormat={{ hour: 'numeric', omitZeroMinute: false, meridiem: 'short' }}
           firstDay={1}
-          nowIndicator={true}
-          selectable={true}
-          selectMirror={true}
-          editable={true}
+          nowIndicator
+          selectable
+          selectMirror
+          editable
           eventResizableFromStart={false}
           events={fcEvents}
           select={handleDateSelect}
+          eventClick={handleEventClick}
           eventResize={handleEventResize}
           eventDrop={handleEventDrop}
           datesSet={handleDatesSet}
           eventContent={(info) => <EventContent eventInfo={info} />}
           height="100%"
-          expandRows={true}
+          expandRows
           scrollTime="08:45:00"
           dayHeaderContent={(args) => {
             const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -232,14 +207,33 @@ export default function StudyCalendar() {
         />
       </div>
 
-      {modal && (
-        <CreateBlockModal
-          position={modal.position}
-          timeInfo={modal.timeInfo}
-          onConfirm={handleModalConfirm}
-          onCancel={() => setModal(null)}
-        />
-      )}
+      <CreateEventDrawer
+        open={!!createDraft}
+        draft={createDraft}
+        onClose={() => setCreateDraft(null)}
+        onCreated={async (input) => {
+          await createOne(input);
+          setCreateDraft(null);
+        }}
+        existingEvents={events}
+        expandedClassMeetings={expandedMeetings}
+      />
+      <EventDetailsPanel
+        event={selectedEvent}
+        courses={courses}
+        currentUserId={userId}
+        onClose={() => setSelectedEvent(null)}
+        onUpdate={async (patch) => {
+          if (!selectedEvent) return;
+          const updated = await updateOne(selectedEvent.id, patch);
+          setSelectedEvent(updated);
+        }}
+        onDelete={async () => {
+          if (!selectedEvent) return;
+          await deleteOne(selectedEvent.id);
+          setSelectedEvent(null);
+        }}
+      />
     </div>
   );
 }

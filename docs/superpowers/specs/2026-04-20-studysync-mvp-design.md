@@ -484,7 +484,6 @@ Integration tests deferred post-MVP.
 - No timezone selection (uses browser local)
 - No admin panel
 - Email verification optional for MVP
-- Course catalog is per-user (no global course DB); duplication possible
 
 ---
 

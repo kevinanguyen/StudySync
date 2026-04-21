@@ -129,6 +129,10 @@
   box-sizing: border-box;
 }
 
+.fc .fc-timegrid-now-indicator-container {
+  overflow: visible !important;
+}
+
 /* Axis-column marker: a small white-with-dark-border pin, matches the line's
    treatment so the indicator reads as one coherent element. Restores the
    arrow element (previously hidden) but restyles it — a triangle in any

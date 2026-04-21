@@ -149,6 +149,19 @@ export default function StudyCalendar() {
     setAnchorDate(start);
   }, []);
 
+  // automatically have scroll set to 3 hours before current time 
+  const nowScrollTime = useMemo(() => {
+  const now = new Date();
+  now.setHours(now.getHours() - 3);
+
+  const hours = Math.max(0, now.getHours()); // prevent negative
+  const minutes = now.getMinutes();
+
+  const hh = String(hours).padStart(2, '0');
+  const mm = String(minutes).padStart(2, '0');
+  return `${hh}:${mm}:00`;
+  }, []);
+
   function navPrev() { calRef.current?.getApi().prev(); }
   function navNext() { calRef.current?.getApi().next(); }
   function navToday() { calRef.current?.getApi().today(); }
@@ -197,8 +210,8 @@ export default function StudyCalendar() {
           initialView="timeGridWeek"
           headerToolbar={false}
           allDaySlot={false}
-          slotMinTime="08:30:00"
-          slotMaxTime="19:00:00"
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
           slotDuration="00:30:00"
           slotLabelInterval="01:00:00"
           slotLabelFormat={{ hour: 'numeric', omitZeroMinute: false, meridiem: 'short' }}
@@ -217,14 +230,17 @@ export default function StudyCalendar() {
           eventContent={(info) => <EventContent eventInfo={info} />}
           height="100%"
           expandRows
-          scrollTime="08:45:00"
+          scrollTime={nowScrollTime}
           dayHeaderContent={(args) => {
             const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
             const dow = args.date.getDay();
             const label = dayNames[dow === 0 ? 6 : dow - 1];
+            const dateNum = args.date.getDate(); //day of month
             return (
               <div className={`text-center py-1 ${args.isToday ? 'text-[#3B5BDB]' : 'text-gray-500'}`}>
-                <span className="text-[0.68rem] font-bold tracking-widest">{label}</span>
+                <span className="text-[0.68rem] font-bold tracking-widest"> 
+                  {label} {dateNum}
+                </span>
               </div>
             );
           }}

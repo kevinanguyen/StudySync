@@ -94,33 +94,59 @@
   border-color: #e2e8f0 !important;
 }
 
-/* "Now" indicator: a thin translucent red line across the current day only.
-   The left-axis arrow is hidden — it was visually noisy and doubled up with
-   the line. The line is short (doesn't cross full row) because FullCalendar
-   only draws it in the current day column. */
+/* "Now" indicator: rendered as a high-contrast line + dot pair that reads
+   clearly on ANY course color underneath (including red/pink/orange events
+   that would previously clash with a red indicator). The trick is a bright
+   white core with a thin dark halo — relies on contrast rather than hue, so
+   it's also color-blind friendly.
+
+   FullCalendar's `nowIndicator` repositions these elements automatically
+   once per minute, which matches the precision of the CST clock pill in
+   the header.  */
+
+/* The line across the current-day column. */
 .fc .fc-timegrid-now-indicator-line {
-  border-color: rgba(239, 68, 68, 0.65);   /* red-500 @ 65% */
-  border-width: 0 0 1px 0;
-  border-style: solid;
+  border: none;
+  background: #ffffff;
+  height: 2px;
+  /* 1px dark halo on top + bottom so the white is visible against any color. */
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.85);
   position: relative;
-  z-index: 4;
+  z-index: 5;
 }
 
-/* Red dot at the leading edge of the line so you can tell exactly which slot "now" is in. */
+/* Leading dot marking exactly which day the current time is in. */
 .fc .fc-timegrid-now-indicator-line::before {
   content: '';
   position: absolute;
-  left: -4px;
+  left: -5px;
   top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid rgba(17, 24, 39, 0.85);
+  box-sizing: border-box;
+}
+
+/* Axis-column marker: a small white-with-dark-border pin, matches the line's
+   treatment so the indicator reads as one coherent element. Restores the
+   arrow element (previously hidden) but restyles it — a triangle in any
+   single color had the same color-clash problem. */
+.fc .fc-timegrid-now-indicator-arrow {
+  display: block !important;
+  border: 2px solid rgba(17, 24, 39, 0.85);
+  background: #ffffff;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: #ef4444;
-}
-
-/* Hide the axis arrow — the line + dot are enough. */
-.fc .fc-timegrid-now-indicator-arrow {
-  display: none !important;
+  margin-top: -4px;
+  margin-right: 4px;
+  /* Neutralize FullCalendar's default triangle-via-border trick. */
+  border-top-color: rgba(17, 24, 39, 0.85);
+  border-bottom-color: rgba(17, 24, 39, 0.85);
+  border-left-color: rgba(17, 24, 39, 0.85);
+  border-right-color: rgba(17, 24, 39, 0.85);
 }
 
 .fc .fc-highlight {

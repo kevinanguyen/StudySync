@@ -4,19 +4,36 @@ import { useEffect, useState } from 'react';
  * Returns the current moment formatted in US Central Time
  * (`America/Chicago`), regardless of the browser's locale setting.
  *
- * Used to show an unambiguous "Tue 10:23 AM" reference next to the
- * calendar so users always know what time is what, even if their OS
- * timezone happens to be set to something other than CST.
- *
- * Updates every 30 seconds — enough precision for a wall clock without
- * thrashing renders.
+ * The display only has minute precision ("Tue 10:23 AM"), so we only
+ * need to re-render on minute boundaries — but those boundaries must
+ * line up with the wall clock, not with mount time. We schedule the
+ * first tick for the moment the next real-world minute starts, then
+ * tick every 60s after that. This keeps the displayed minute within
+ * a second or two of reality rather than up to 59s stale.
  */
 export function useCentralClock(): string {
   const [text, setText] = useState(() => formatCentral(new Date()));
 
   useEffect(() => {
-    const intervalId = setInterval(() => setText(formatCentral(new Date())), 30_000);
-    return () => clearInterval(intervalId);
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    function tick() {
+      setText(formatCentral(new Date()));
+    }
+
+    // Milliseconds until the start of the next wall-clock minute.
+    const now = new Date();
+    const msUntilNextMinute = 60_000 - (now.getSeconds() * 1000 + now.getMilliseconds());
+
+    const timeoutId = setTimeout(() => {
+      tick(); // first wall-clock-aligned tick
+      intervalId = setInterval(tick, 60_000); // 60s steady-state
+    }, msUntilNextMinute);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId !== undefined) clearInterval(intervalId);
+    };
   }, []);
 
   return text;

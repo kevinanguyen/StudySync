@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { listMyGroups, createGroup, deleteGroup, type Group, type GroupInput } from '@/services/groups.service';
 
@@ -40,6 +41,27 @@ export function useGroups(): UseGroupsResult {
     window.addEventListener('studysync:tab-revived', onRevive);
     return () => window.removeEventListener('studysync:tab-revived', onRevive);
   }, []);
+
+  // Realtime: subscribe to group_members changes touching this user so being
+  // added to / removed from a group appears on the receiver's list
+  // without a manual refresh. RLS filters rows server-side (users can only
+  // SELECT memberships where user_id = auth.uid()), so a broad subscription
+  // is safe. Unique topic per mount to dodge StrictMode remount issues.
+  useEffect(() => {
+    if (!userId) return;
+    const topic = `group_members:${userId}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+    const channel = supabase
+      .channel(topic)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'group_members' },
+        () => { void reloadRef.current(); }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   // Mutations optimistically update local state, then fire-and-forget reload.
   // Never await reload — it can hang in backgrounded tabs and leave the

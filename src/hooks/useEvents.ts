@@ -64,10 +64,17 @@ export function useEvents(weekStart: Date, weekEnd: Date): UseEventsResult {
 
   // Tab-revived: if the initial fetch stalled while the tab was backgrounded,
   // re-fire it so the calendar doesn't stay blank.
+  // Friends-changed: shared events are RLS-filtered by friendship, so an
+  // unfriend makes the ex-friend's shared events disappear and a new
+  // friendship makes theirs appear. Either way we need a reload.
   useEffect(() => {
-    function onRevive() { void reloadRef.current(); }
-    window.addEventListener('studysync:tab-revived', onRevive);
-    return () => window.removeEventListener('studysync:tab-revived', onRevive);
+    function onReload() { void reloadRef.current(); }
+    window.addEventListener('studysync:tab-revived', onReload);
+    window.addEventListener('studysync:friends-changed', onReload);
+    return () => {
+      window.removeEventListener('studysync:tab-revived', onReload);
+      window.removeEventListener('studysync:friends-changed', onReload);
+    };
   }, []);
 
   const createOne = useCallback(async (input: EventInput) => {

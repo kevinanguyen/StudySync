@@ -69,6 +69,10 @@ export function useFriends(): UseFriendsResult {
   //  - Unique channel topic per mount for the same reason. RLS filters the
   //    rows anyway (users only see friendships they're a party to), so we
   //    don't need a filter here.
+  //
+  // Every friendship change also dispatches `studysync:friends-changed` so
+  // hooks whose data depends on friendship (e.g. useEvents — shared events
+  // are RLS-filtered by friendship) can reload.
   useEffect(() => {
     if (!userId) return;
     const topic = `friendships:${userId}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
@@ -77,7 +81,10 @@ export function useFriends(): UseFriendsResult {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'friendships' },
-        () => { void reloadRef.current(); }
+        () => {
+          void reloadRef.current();
+          window.dispatchEvent(new CustomEvent('studysync:friends-changed'));
+        }
       )
       .subscribe();
     return () => {
@@ -100,21 +107,32 @@ export function useFriends(): UseFriendsResult {
   // Mutations: await the actual write, then kick a reload in the background.
   // Never `await reload()` here — it can hang in backgrounded tabs, which
   // would leave modal submit buttons stuck on "Sending…" forever.
+  //
+  // Also dispatch `studysync:friends-changed` so event-shaped consumers
+  // (useEvents) reload — shared events are RLS-filtered by friendship, so
+  // a friendship change can make events appear or disappear.
+  function broadcastFriendsChanged() {
+    window.dispatchEvent(new CustomEvent('studysync:friends-changed'));
+  }
+
   const sendRequest = useCallback(async (otherUserId: string) => {
     if (!userId) throw new Error('Not authenticated');
     await sendFriendRequest(userId, otherUserId);
+    broadcastFriendsChanged();
     void reload().catch(() => {});
   }, [userId, reload]);
 
   const accept = useCallback(async (otherUserId: string) => {
     if (!userId) throw new Error('Not authenticated');
     await acceptFriendRequest(userId, otherUserId);
+    broadcastFriendsChanged();
     void reload().catch(() => {});
   }, [userId, reload]);
 
   const remove = useCallback(async (otherUserId: string) => {
     if (!userId) throw new Error('Not authenticated');
     await removeFriendship(userId, otherUserId);
+    broadcastFriendsChanged();
     void reload().catch(() => {});
   }, [userId, reload]);
 

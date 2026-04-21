@@ -7,11 +7,13 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { startOfWeek, endOfWeek, expandClassMeetings } from '@/lib/time';
 import { useEvents } from '@/hooks/useEvents';
 import { useCourses } from '@/hooks/useCourses';
+import { useCentralClock } from '@/hooks/useCentralClock';
 import { useAuthStore } from '@/store/authStore';
 import CreateEventDrawer from './CreateEventDrawer';
 import EventDetailsPanel from './EventDetailsPanel';
-import type { EventRow } from '@/types/domain';
+import type { EventRow, EventOwnerInfo } from '@/types/domain';
 
+/** Look up the user's personal color for a course. Falls back to a neutral grey for uncategorized events. */
 function getCourseColor(courseId: string | null, courses: { id: string; color: string }[]): string {
   if (!courseId) return '#6B7280';
   return courses.find((c) => c.id === courseId)?.color ?? '#6B7280';
@@ -21,19 +23,25 @@ function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { event } = eventInfo;
   const isClassMeeting = event.extendedProps.kind === 'class_meeting';
   const isShared = event.extendedProps.kind === 'event' && !event.startEditable;
+  const ownerProfile = event.extendedProps.owner_profile as EventOwnerInfo | null | undefined;
   return (
-    <div className="h-full flex flex-col px-1 py-0.5 overflow-hidden">
-      <div className="flex items-center gap-1">
+    <div className="h-full flex items-start gap-1 px-1 py-0.5 overflow-hidden">
+      {isShared && ownerProfile && (
+        <span
+          title={`Created by ${ownerProfile.name}`}
+          aria-label={`Created by ${ownerProfile.name}`}
+          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[0.55rem] font-bold text-white ring-1 ring-white/70"
+          style={{ backgroundColor: ownerProfile.avatar_color }}
+        >
+          {ownerProfile.initials}
+        </span>
+      )}
+      <div className="flex-1 min-w-0 flex flex-col">
         <span className={`font-bold text-[0.68rem] leading-tight truncate ${isClassMeeting ? 'opacity-70' : ''}`}>
           {event.title}
         </span>
-        {isShared && (
-          <span className="text-[0.5rem] bg-white/30 rounded px-0.5 leading-tight flex-shrink-0 uppercase font-semibold">
-            shared
-          </span>
-        )}
+        <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
       </div>
-      <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
     </div>
   );
 }
@@ -57,6 +65,7 @@ export default function StudyCalendar() {
   const { courses, classMeetings } = useCourses();
 
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const centralClock = useCentralClock();
 
   const expandedMeetings = useMemo(() => expandClassMeetings(classMeetings, weekStart), [classMeetings, weekStart]);
 
@@ -70,7 +79,7 @@ export default function StudyCalendar() {
       borderColor: 'transparent',
       textColor: '#ffffff',
       editable: e.owner_id === userId,
-      extendedProps: { kind: 'event', source: e },
+      extendedProps: { kind: 'event', source: e, owner_profile: e.owner_profile },
     }));
     const meetingItems = expandedMeetings.map((m) => ({
       id: `meeting:${m.id}`,
@@ -159,10 +168,17 @@ export default function StudyCalendar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
+        <span
+          className="ml-auto text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded select-none tabular-nums"
+          title="Current time in Central Time"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block mr-1.5 align-middle" aria-hidden />
+          {centralClock} CST
+        </span>
         <button
           type="button"
           onClick={() => setCreateDraft({ start: new Date(), end: new Date(Date.now() + 60 * 60 * 1000) })}
-          className="ml-auto text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors"
+          className="text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors"
         >
           + New Event
         </button>

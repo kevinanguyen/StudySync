@@ -29,8 +29,13 @@ export function useMessages(groupId: string): UseMessagesResult {
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load messages'); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
+    // Unique topic per mount. Prevents supabase-js from returning an
+    // already-subscribed channel across React StrictMode remounts or quick
+    // group navigations, which would throw "cannot add postgres_changes
+    // callbacks after subscribe()" on the next `.on()`.
+    const topic = `messages:${groupId}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
     const channel = supabase
-      .channel(`messages:${groupId}`)
+      .channel(topic)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` },

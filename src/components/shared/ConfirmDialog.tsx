@@ -8,6 +8,9 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** When true, disables both buttons and shows `loadingLabel` on the confirm button. */
+  loading?: boolean;
+  loadingLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,6 +22,8 @@ export default function ConfirmDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   destructive = false,
+  loading = false,
+  loadingLabel = 'Working…',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -29,12 +34,12 @@ export default function ConfirmDialog({
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape' && !loading) onCancel();
     }
     document.addEventListener('keydown', onKey);
     confirmRef.current?.focus();
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onCancel]);
+  }, [open, onCancel, loading]);
 
   if (!open) return null;
 
@@ -42,9 +47,10 @@ export default function ConfirmDialog({
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <button
         type="button"
-        onClick={onCancel}
+        onClick={loading ? undefined : onCancel}
         aria-label="Close dialog"
         className="absolute inset-0 bg-black/40 cursor-default"
+        disabled={loading}
       />
       <div ref={panelRef} className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5">
         <h3 id="confirm-title" className="text-base font-bold text-gray-800 mb-1">
@@ -55,7 +61,8 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+            disabled={loading}
+            className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelLabel}
           </button>
@@ -63,11 +70,12 @@ export default function ConfirmDialog({
             ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            className={`text-sm font-semibold text-white px-3 py-1.5 rounded-md transition-colors ${
+            disabled={loading}
+            className={`text-sm font-semibold text-white px-3 py-1.5 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
               destructive ? 'bg-red-600 hover:bg-red-700' : 'bg-[#3B5BDB] hover:bg-[#3451c7]'
             }`}
           >
-            {confirmLabel}
+            {loading ? loadingLabel : confirmLabel}
           </button>
         </div>
       </div>

@@ -1,126 +1,158 @@
 # StudySync
 
-A collaborative study scheduling platform for college students. StudySync helps students coordinate study sessions, see when friends are available, and organize group study time — all from a shared calendar view.
+A collaborative study scheduling platform for college students. StudySync replaces the usual mess of group-texting and screenshot-comparing with a shared weekly calendar that shows when your friends are free, lets you create study blocks together, and keeps everyone in sync in real time.
 
 ---
 
-## What We're Building
+## What StudySync Does
 
-StudySync solves the problem of disorganized study coordination. Instead of texting back and forth to find a time, students can see their friends' schedules, create shared study blocks, join study groups, and stay in sync — across web today, and mobile in the future.
-
-**Roadmap:**
-- **Phase 1 (current):** Web app with Supabase backend, auth, persistent data, real-time features
-- **Phase 2:** Mobile app (React Native / Expo) sharing core business logic with the web
+- **See overlap at a glance.** Your friends' class meetings and shared study blocks render directly on your calendar alongside your own — no switching tabs.
+- **Create study blocks in context.** The create-event drawer shows, per-invitee, whether they're available for the slot you picked, and surfaces an existing overlapping event as a "join this one instead" suggestion.
+- **Organize around courses.** A course is a globally shared record; your personal color, instructor nickname, and class meeting times live on your enrollment, so classmates can customize their own view independently.
+- **Groups with realtime chat.** Create study groups from your friends, plan upcoming sessions, and chat live — messages deliver instantly via Supabase Realtime.
+- **Auth, persistence, and access control** handled by Supabase (Postgres + Auth + Row-Level Security).
 
 ---
 
-## Current Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | React 19 |
+| UI framework | React 19 |
 | Build tool | Vite 5 |
-| Language | TypeScript 5 |
+| Language | TypeScript 5 (strict mode) |
 | Styling | Tailwind CSS 3 |
-| Calendar | FullCalendar 6 |
-| Routing | React Router 6 |
+| Calendar | FullCalendar 6 (timeGrid + interaction plugins) |
+| Routing | React Router 6 (data router API) |
 | State | Zustand 5 |
-| Backend | Supabase (Postgres + Auth + Realtime) |
-| Testing | Vitest + Testing Library |
-| Linting | ESLint 9 |
+| Backend | Supabase (Postgres 17, Auth, Realtime) |
+| Testing | Vitest + @testing-library/react + jsdom |
+| Linting | ESLint 9 (react-hooks, react-refresh) |
 
 ---
 
-## Current Features
+## Feature Tour
 
-- Email/password authentication (Supabase) with session persistence
-- Protected dashboard with TypeScript + React Router + Zustand
-- **Courses**: globally shared courses, per-user enrollment metadata, case-insensitive code lookup, add/drop flow, class meetings rendered as background blocks on the calendar
-- **Persistent weekly calendar** (FullCalendar): drag/resize events with optimistic updates and revert-on-error; "Shared" badge for events owned by others
-- **Event creation drawer**: title, course, date/time, location, description, visibility (private / friends-in-course / group), friend multi-select with inline availability ("Available" ✓ / "Busy — [conflict]" ●), group picker
-- **Event details panel**: view, edit, delete (owner); accept/decline/maybe for invited users; participant list with status chips
-- **Availability engine**: pure-function conflict detection with full unit tests; wired into create drawer as self-conflict warning + per-friend availability + collision-join-suggestion banner ("Someone already has this slot — join instead?")
-- **Friends**: profile search by username/email, friend requests with accept/decline, friend list with availability status, pending-request badge, hover-to-unfriend with confirmation
-- **Groups**: create groups with optional course + description, invite friends on creation, group page at `/groups/:id` with member list, upcoming sessions card, and delete flow
-- **Realtime group chat**: Supabase Postgres Changes subscription; instant message delivery across members; Enter-to-send composer
-- **Settings page** (`/settings`): edit profile (name, username, major, grad year, avatar color), manual status override with custom status note, change password
-- **Toast notifications**: success/error/info feedback for every mutation, auto-dismiss, stackable
-- **Loading skeletons** for courses and friends lists
-- **Focus-trapped modals** for keyboard accessibility
-- **Responsive layout**: desktop-first, gracefully collapses below tablet
-- Profile status indicator (Discord-style avatar dot)
+### Authentication
+- Email/password sign-up with session persistence (refresh tokens auto-renewed).
+- Protected routes: any page under `/` redirects unauthenticated users to `/login`.
+- Sign-out, password change, and profile edit from the settings page.
+
+### Calendar & events
+- Weekly time-grid view (Mon–Sun, 8:30 AM – 7:00 PM).
+- Class meetings render as **background blocks** in the course color; events render as **foreground blocks** on top.
+- Drag-to-create: click-drag on an empty slot to open the create-event drawer with times pre-filled.
+- Drag-to-reschedule: events you own can be dragged or resized; changes persist optimistically with revert-on-error.
+- Read-only for non-owners: shared events show a small creator-initials avatar instead of being editable.
+- "Now" indicator: red dot + thin line marks the current time; a Central-Time clock pill in the header gives an unambiguous CST reference.
+
+### Courses
+- Shared course records keyed by code (case-insensitive) — if a classmate has already added `CS4063`, you enroll in the same underlying record.
+- Per-user personal color and instructor/nickname fields — customize without affecting classmates.
+- Class meetings modeled as recurring weekly slots (day-of-week + time range) that expand to dated background events for each week view.
+- Click a course row to edit; hover and click the × to drop. Drop cascades to remove your class meetings for that course.
+
+### Friends & invites
+- Username/email profile search with case-insensitive prefix matching.
+- Friend requests with accept / decline flows.
+- Per-friend availability shown in the invite picker — an inline "Busy — overlaps with CS4063" banner warns before you invite.
+- Click a friend's avatar to open a profile card (major, graduation year, status).
+- Realtime friend-request notification: a pending friendship inserted elsewhere appears on your right panel immediately.
+
+### Groups & chat
+- Create a group with optional course association + description, invite members on creation.
+- Group detail page at `/groups/:id` with member list and upcoming group sessions.
+- Realtime chat via Supabase Postgres Changes — messages appear across all members' screens without polling.
+
+### Settings
+- Edit profile (name, username, major, graduation year, avatar color).
+- Manual status override (`available` / `studying` / `busy`) with optional custom status text.
+- Change password (Supabase Auth).
+
+### Polish
+- Toast notifications for every mutation (success / error / info).
+- Loading skeletons for initial data fetch.
+- Focus-trapped modals and Escape-to-close.
+- Empty-state illustrations with inline CTAs on the courses, friends, and groups lists.
+- Responsive layout: desktop-first, gracefully degrades to tablet width.
 
 ---
 
-## Setup
+## Getting Started
 
-### 1. Clone and install
+### Prerequisites
+- Node.js 18+ and npm
+- A Supabase project (free tier is sufficient)
+
+### 1. Install
 
 ```bash
-git clone git@github.com:kevinanguyen/StudySync.git
+git clone <repository-url>
 cd StudySync
 npm install
 ```
 
 ### 2. Create a Supabase project
+1. Sign in at [supabase.com](https://supabase.com) and create a new project.
+2. Once provisioned, go to **Settings → API Keys** and note:
+   - The project **URL**
+   - The **anon public** key
 
-1. Go to https://supabase.com and sign up / log in
-2. Create a new project named "StudySync"
-3. Choose a strong database password (save it somewhere safe)
-4. Select the closest region
-5. Wait for the project to finish provisioning
-
-### 3. Configure environment variables
+### 3. Configure environment
 
 ```bash
 cp .env.example .env.local
 ```
 
-In your Supabase project dashboard → Settings → API Keys:
-- Copy the **Project URL** (or use the domain from the REST endpoint, without the `/rest/v1/` suffix) → paste into `VITE_SUPABASE_URL` in `.env.local`
-- Copy the **anon public** key → paste into `VITE_SUPABASE_ANON_KEY` in `.env.local`
+Edit `.env.local`:
+```
+VITE_SUPABASE_URL=<your project URL>
+VITE_SUPABASE_ANON_KEY=<your anon public key>
+```
 
-### 4. Run database migrations
+### 4. Apply database migrations
 
-Two ways to apply the schema:
+In the Supabase dashboard → **SQL Editor**, run the migration files in order:
 
-**Option A: Supabase SQL Editor (manual)**
-1. Dashboard → SQL Editor → New Query
-2. Copy contents of `supabase/migrations/0001_schema.sql` → Run
-3. Open a new query, copy `supabase/migrations/0002_rls.sql` → Run
-4. Verify tables exist: Database → Tables (should show 10 tables, all with RLS enabled)
+```
+supabase/migrations/0001_schema.sql
+supabase/migrations/0002_rls.sql
+supabase/migrations/0003_fix_enrollments_recursive_rls.sql
+supabase/migrations/0004_fix_all_recursive_rls.sql
+supabase/migrations/0005_enable_messages_realtime.sql
+supabase/migrations/0006_enable_friendships_realtime.sql
+```
 
-**Option B: Supabase CLI or MCP (automated)**
-If you have the Supabase CLI or MCP connected:
+Or, if you have the Supabase CLI:
+
 ```bash
 supabase db push
 ```
 
-### 5. Disable email confirmation for dev
+### 5. Disable email confirmation for development
 
-In the Supabase dashboard: **Authentication** → **Sign In / Providers** → **Email** → disable the **"Confirm email"** toggle.
+In the Supabase dashboard: **Authentication → Sign In / Providers → Email** — disable the **Confirm email** toggle. Without this, new sign-ups return no session because Supabase expects the user to click a verification email first.
 
-Without this, signup returns no session (Supabase requires email verification first) and the app will throw an error. Re-enable it before production.
-
-### 6. Run the app
+### 6. Run
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:5173 and create an account.
+Visit [http://localhost:5173](http://localhost:5173) and create an account.
 
 ---
 
 ## Scripts
 
 ```bash
-npm run dev         # Vite dev server
-npm run build       # Production build (tsc + vite build)
-npm run typecheck   # TypeScript type-check only
-npm run test        # Run tests in watch mode
-npm run test:run    # Run tests once (CI-friendly)
-npm run lint        # ESLint check
+npm run dev        # Vite dev server (HMR) at http://localhost:5173
+npm run build      # Production build (tsc --build + vite build)
+npm run preview    # Serve the production build locally
+npm run typecheck  # TypeScript compile-only check
+npm run test       # Vitest in watch mode
+npm run test:run   # Vitest single run (suitable for CI)
+npm run lint       # ESLint
 ```
 
 ---
@@ -129,66 +161,94 @@ npm run lint        # ESLint check
 
 ```
 src/
-├── app/              # Router, providers (App, routes, ProtectedRoute)
-├── pages/            # Route-level pages (LoginPage, SignupPage, DashboardPage)
-├── components/       # UI components grouped by domain
-│   ├── auth/
-│   ├── calendar/
-│   ├── courses/
-│   ├── friends/
-│   ├── groups/
-│   ├── layout/
-│   └── shared/
-├── hooks/            # React hooks (useAuth)
-├── lib/              # Pure utilities (supabase client, time helpers)
-├── services/         # Supabase query wrappers (auth, ...)
-├── store/            # Zustand stores (authStore)
-├── types/            # TypeScript types (generated from Supabase)
-└── data/             # Mock data (to be replaced by real queries)
+├── app/                 Router + providers
+│   ├── App.tsx
+│   ├── routes.tsx
+│   └── ProtectedRoute.tsx
+├── pages/               Route-level pages
+│   ├── LoginPage.tsx
+│   ├── SignupPage.tsx
+│   ├── DashboardPage.tsx
+│   ├── GroupPage.tsx
+│   └── SettingsPage.tsx
+├── components/          UI components grouped by domain
+│   ├── auth/            Login + signup layout
+│   ├── calendar/        StudyCalendar, CreateEventDrawer, EventDetailsPanel, InviteePicker
+│   ├── courses/         CoursesSidebar, Add/Edit course modals, ClassMeetingsField
+│   ├── friends/         RightPanel, AddFriendModal, FriendProfileModal, FriendRequestsPanel
+│   ├── groups/          CreateGroupModal, GroupChat, GroupMembersList, UpcomingSessionsCard
+│   ├── layout/          Header
+│   └── shared/          Avatar, Drawer, ConfirmDialog, Toast, EmptyState, Skeleton
+├── hooks/               React hooks (data, auth, UI)
+│   ├── useAuth.ts
+│   ├── useCourses.ts
+│   ├── useEvents.ts
+│   ├── useFriends.ts
+│   ├── useGroups.ts
+│   ├── useMessages.ts
+│   ├── useFocusTrap.ts
+│   └── useSupabaseKeepalive.ts
+├── lib/                 Pure utilities (no external deps)
+│   ├── supabase.ts      Typed client + 10s fetch timeout
+│   ├── time.ts          Week math, range overlap, class-meeting expansion
+│   ├── availability.ts  Conflict detection, join-suggestion
+│   └── status.ts        Status enum → label + color map
+├── services/            Supabase query wrappers (one per domain)
+│   ├── auth.service.ts
+│   ├── profile.service.ts
+│   ├── courses.service.ts
+│   ├── events.service.ts
+│   ├── friends.service.ts
+│   ├── groups.service.ts
+│   └── messages.service.ts
+├── store/               Zustand stores
+│   ├── authStore.ts
+│   └── uiStore.ts
+├── types/               TypeScript types
+│   ├── db.ts            Generated from Supabase schema
+│   └── domain.ts        App-friendly aliases + derived shapes
+└── index.css            Tailwind + FullCalendar overrides
 
-supabase/
-└── migrations/       # SQL migrations (0001_schema.sql, 0002_rls.sql)
+supabase/migrations/     Schema + RLS + realtime migrations
 
-tests/
-├── lib/              # Unit tests for pure utilities
-├── store/            # Store tests
-└── setup.ts          # Test setup (jest-dom matchers)
-
-docs/
-└── superpowers/
-    ├── specs/        # Design specs
-    └── plans/        # Implementation plans
+tests/                   Unit tests (Vitest + Testing Library)
+├── lib/                 Pure-logic tests (time, availability)
+├── services/            Service-level tests
+└── store/               Store tests
 ```
 
 ---
 
-## Architecture Notes
+## Architecture
 
-- **Data flow:** Components → hooks → services → Supabase
-- **State:** Zustand for app-wide state (auth, etc.); hook-local state for transient data
-- **RLS:** Row-level security enforces access control at the database level
-- **Pure logic:** `lib/time.ts` and (eventually) `lib/availability.ts` have no external deps and are fully unit-tested
-- **Shared-block visibility:** friend-tagged course events visible only to friends enrolled in the same course (enforced at the DB level via RLS)
+**Data flow:** Components → hooks → services → Supabase.
+Components render; hooks own stateful logic; services are thin, pure async wrappers around the Supabase client. Services throw typed `*ServiceError` errors which hooks catch and surface to the user via the toast store.
+
+**Database access control** is enforced at the Postgres level via Row-Level Security policies. Friend-tagged course events, for example, are visible only to friends enrolled in the same course — enforced by the RLS policy on the `events` table, not by a client filter.
+
+**Realtime.** Three tables broadcast Postgres changes via Supabase Realtime: `friendships` (pending-request / accept notifications), `messages` (group chat), and `events` is served over the fetch path (no subscription currently). Each subscription uses a unique channel topic per mount to survive React strict-mode remounts.
+
+**Tab lifecycle.** A single `useSupabaseKeepalive` hook mounted at the app root pauses Supabase Auth's auto-refresh while the window is blurred or hidden, and resumes it on focus/visibility. This prevents the JS engine from stalling on a throttled background refresh promise — a common failure mode when browser tabs live on different macOS Spaces or virtual desktops. On resume, the hook also re-subscribes any realtime channels that dropped and dispatches a `studysync:tab-revived` event that data hooks listen for to reload any data that stalled.
+
+**Network safety.** The Supabase client uses a custom `fetch` with a 10-second abort timeout on every REST and auth call — stuck connections fail loudly instead of hanging indefinitely.
+
+**Pure logic is tested.** `lib/time.ts` and `lib/availability.ts` have no external dependencies and are covered by unit tests. Other layers are tested where behavior is non-trivial.
 
 ---
 
-## Troubleshooting
+## Testing
 
-**"Invalid hook call" errors spamming the console**
-Vite sometimes caches React and React-DOM with mismatched hashes after a dep change. Fix:
+58 unit tests covering pure-logic modules, services, and Zustand stores.
+
 ```bash
-rm -rf node_modules/.vite
-npm run dev
+npm run test:run
 ```
 
-**"Signup returned no session"**
-Email confirmation is still enabled in Supabase. See Setup Step 5.
+---
 
-**"email rate limit exceeded"**
-Supabase free-tier SMTP only allows ~3-4 confirmation emails per hour. Disable email confirmation (Setup Step 5) or wait.
+## Design Decisions of Note
 
-**Schema types out of date after changing migrations**
-Regenerate with the Supabase CLI:
-```bash
-npx supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/db.ts
-```
+- **Snake_case on the client.** Database-derived field names (`owner_id`, `start_at`, etc.) are preserved all the way to the UI rather than being remapped to camelCase. One fewer place for naming bugs to hide.
+- **Services throw, hooks catch, UI toasts.** Any Supabase error becomes a typed service error; callers catch it, surface a toast, and optionally keep an inline field error as a backup.
+- **Optimistic mutations + fire-and-forget reload.** Mutations update local state immediately with the returned row, then fire `reload()` in the background without awaiting. This keeps submit buttons from spinning on slow follow-up refetches and plays nicely with realtime subscriptions.
+- **Channel topic uniqueness.** Realtime channel topics include a per-mount suffix so remounted effects never get handed back a previously-subscribed channel (which would throw on the next `.on()` call).

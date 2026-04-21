@@ -36,3 +36,16 @@ export interface Conflict {
   start: Date;
   end: Date;
 }
+
+// Minimal profile info piggybacked onto events so shared events can render
+// the creator's avatar without a separate lookup per event.
+export interface EventOwnerInfo {
+  id: string;
+  name: string;
+  initials: string;
+  avatar_color: string;
+}
+
+export interface EventWithOwner extends EventRow {
+  owner_profile: EventOwnerInfo | null;
+}

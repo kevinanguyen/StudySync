@@ -94,16 +94,33 @@
   border-color: #e2e8f0 !important;
 }
 
+/* "Now" indicator: a thin translucent red line across the current day only.
+   The left-axis arrow is hidden — it was visually noisy and doubled up with
+   the line. The line is short (doesn't cross full row) because FullCalendar
+   only draws it in the current day column. */
 .fc .fc-timegrid-now-indicator-line {
-  border-color: #3B5BDB;
-  border-width: 2px;
+  border-color: rgba(239, 68, 68, 0.65);   /* red-500 @ 65% */
+  border-width: 0 0 1px 0;
+  border-style: solid;
+  position: relative;
+  z-index: 4;
 }
 
+/* Red dot at the leading edge of the line so you can tell exactly which slot "now" is in. */
+.fc .fc-timegrid-now-indicator-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #ef4444;
+}
+
+/* Hide the axis arrow — the line + dot are enough. */
 .fc .fc-timegrid-now-indicator-arrow {
-  border-color: #3B5BDB;
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  margin-top: -5px;
+  display: none !important;
 }
 
 .fc .fc-highlight {

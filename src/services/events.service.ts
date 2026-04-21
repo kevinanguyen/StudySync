@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { EventRow, EventVisibility } from '@/types/domain';
+import type { EventRow, EventVisibility, EventWithOwner, EventOwnerInfo } from '@/types/domain';
 import type { Tables } from '@/types/db';
 
 export class EventsServiceError extends Error {
@@ -32,16 +32,27 @@ export function validateEventInput(input: EventInput): string | null {
   return null;
 }
 
-/** List events visible to the current user within [weekStart, weekEnd). RLS handles access control. */
-export async function listEventsInRange(weekStart: Date, weekEnd: Date): Promise<EventRow[]> {
+/**
+ * List events visible to the current user within [weekStart, weekEnd).
+ * RLS handles access control. Joins the owner's profile (minimal fields)
+ * so shared events can render the creator's avatar without a separate
+ * lookup per event.
+ */
+export async function listEventsInRange(weekStart: Date, weekEnd: Date): Promise<EventWithOwner[]> {
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('*, owner_profile:profiles!events_owner_id_fkey(id, name, initials, avatar_color)')
     .gte('start_at', weekStart.toISOString())
     .lt('start_at', weekEnd.toISOString())
     .order('start_at', { ascending: true });
   if (error) throw new EventsServiceError(error.message, error);
-  return data ?? [];
+  return (data ?? []).map((row) => {
+    // PostgREST returns the joined row as a single object (1:1). Strip it into our shape.
+    const { owner_profile, ...eventCols } = row as typeof row & {
+      owner_profile: EventOwnerInfo | null;
+    };
+    return { ...(eventCols as EventRow), owner_profile: owner_profile ?? null };
+  });
 }
 
 export async function createEvent(input: EventInput): Promise<EventRow> {

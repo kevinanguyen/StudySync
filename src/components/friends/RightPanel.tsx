@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Avatar from '../shared/Avatar';
 import AddFriendModal from './AddFriendModal';
 import FriendRequestsPanel from './FriendRequestsPanel';
+import FriendProfileModal from './FriendProfileModal';
 import CreateGroupModal from '../groups/CreateGroupModal';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import { useFriends } from '@/hooks/useFriends';
@@ -10,7 +11,8 @@ import { useGroups } from '@/hooks/useGroups';
 import { statusConfig } from '@/lib/status';
 import { useUIStore } from '@/store/uiStore';
 import { FriendRowSkeleton } from '../shared/Skeleton';
-import type { FriendshipWithProfile } from '@/services/friends.service';
+import EmptyState from '../shared/EmptyState';
+import type { FriendshipWithProfile, Profile } from '@/services/friends.service';
 
 export default function RightPanel() {
   const [search, setSearch] = useState('');
@@ -24,6 +26,7 @@ export default function RightPanel() {
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
   const [unfriendTarget, setUnfriendTarget] = useState<FriendshipWithProfile | null>(null);
+  const [profileTarget, setProfileTarget] = useState<Profile | null>(null);
 
   async function handleConfirmUnfriend() {
     if (!unfriendTarget) return;
@@ -104,32 +107,49 @@ export default function RightPanel() {
             </div>
           )}
           {!loading && accepted.length === 0 && (
-            <p className="text-[11px] text-gray-500 leading-relaxed">No friends yet. Click <span className="font-semibold">+</span> to find people.</p>
+            <EmptyState
+              compact
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72M18 18.72v-.72A9.094 9.094 0 0014.259 15.52 3 3 0 0118 18v.72zm0 0a9.094 9.094 0 01-3.741-.479M6 18.72a9.094 9.094 0 01-3.741-.479 3 3 0 014.682-2.72M6 18.72v-.72A9.094 9.094 0 019.741 15.52 3 3 0 016 18v.72zm0 0a9.094 9.094 0 003.741-.479m0 0a3 3 0 014.518 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              }
+              title="No friends yet"
+              description="Find classmates to see when you're free together."
+              action={{ label: '+ Add friend', onClick: () => setAddFriendOpen(true) }}
+            />
           )}
 
           <div className="flex flex-col gap-0.5">
             {displayedFriends.map((f) => {
               const cfg = statusConfig[f.other.status];
               return (
-                <div key={f.other.id} className="group relative flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="relative flex-shrink-0">
-                    <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
-                    <span
-                      className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white"
-                      style={{ backgroundColor: cfg.color }}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{f.other.name}</p>
-                    <p className="text-[10px] truncate" style={{ color: cfg.color }}>
-                      {f.other.status_text ?? cfg.label}
-                    </p>
-                  </div>
+                <div key={f.other.id} className="group relative flex items-center rounded-md hover:bg-gray-50 transition-colors">
                   <button
                     type="button"
-                    onClick={() => setUnfriendTarget(f)}
+                    onClick={() => setProfileTarget(f.other)}
+                    aria-label={`View ${f.other.name}'s profile`}
+                    className="flex items-center gap-2 px-1.5 py-1.5 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 rounded-md"
+                  >
+                    <div className="relative flex-shrink-0">
+                      <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
+                      <span
+                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white"
+                        style={{ backgroundColor: cfg.color }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{f.other.name}</p>
+                      <p className="text-[10px] truncate" style={{ color: cfg.color }}>
+                        {f.other.status_text ?? cfg.label}
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setUnfriendTarget(f); }}
                     aria-label={`Unfriend ${f.other.name}`}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 px-1"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 px-1 py-1.5"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -159,7 +179,17 @@ export default function RightPanel() {
 
           {groupsLoading && groups.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
           {!groupsLoading && groups.length === 0 && (
-            <p className="text-[11px] text-gray-500 leading-relaxed">No groups yet. Click <span className="font-semibold">+</span> to create one.</p>
+            <EmptyState
+              compact
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              }
+              title="No groups yet"
+              description="Create a group to plan sessions and chat."
+              action={{ label: '+ New group', onClick: () => setCreateGroupOpen(true) }}
+            />
           )}
 
           <div className="flex flex-col gap-0.5">
@@ -188,6 +218,16 @@ export default function RightPanel() {
       <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
       <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
       <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} onCreate={createGroup} />
+      <FriendProfileModal
+        open={!!profileTarget}
+        profile={profileTarget}
+        onClose={() => setProfileTarget(null)}
+        onUnfriend={profileTarget ? () => {
+          const match = accepted.find((f) => f.other.id === profileTarget.id);
+          setProfileTarget(null);
+          if (match) setUnfriendTarget(match);
+        } : undefined}
+      />
       <ConfirmDialog
         open={!!unfriendTarget}
         title="Unfriend this person?"

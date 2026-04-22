@@ -73,11 +73,17 @@ export default function GroupChat({ groupId }: GroupChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
-        {loading && <p className="text-center text-xs text-gray-400">Loading messages…</p>}
+<div className={`flex flex-col h-full ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
+<div ref={scrollRef} className={`flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3 ${ theme === 'dark' ? 'bg-slate-900' : 'bg-white' }`} >
+        {loading && (
+          <p className={`text-center text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}>
+            Loading messages…
+          </p>
+        )}
         {!loading && messages.length === 0 && (
-          <p className="text-center text-sm text-gray-500 italic my-auto">No messages yet. Start the conversation.</p>
+          <p className={`text-center text-sm italic my-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            No messages yet. Start the conversation.
+          </p>
         )}
         {messages.map((m) => {
           const author = profiles[m.author_id];
@@ -87,26 +93,45 @@ export default function GroupChat({ groupId }: GroupChatProps) {
               <Avatar user={{ avatarColor: author?.avatar_color, initials: author?.initials ?? '?' }} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-xs font-semibold ${mine ? 'text-[#3B5BDB]' : 'text-gray-800'}`}>
+                  <span
+                    className={`text-xs font-semibold ${
+                      mine
+                        ? 'text-[#3B5BDB]'
+                        : theme === 'dark'
+                          ? 'text-gray-100'
+                          : 'text-gray-800'
+                    }`}
+                  >
                     {author?.name ?? 'Unknown'}
                   </span>
-                  <span className="text-[10px] text-gray-400">{formatTime(m.created_at)}</span>
+                  <span className={`text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}>
+                    {formatTime(m.created_at)}
+                  </span>
                 </div>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{m.body}</p>
+                <p className={`text-sm whitespace-pre-wrap break-words ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
+                  {m.body}
+                </p>
               </div>
             </div>
           );
         })}
       </div>
 
-      <form onSubmit={handleSend} className={`${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-gray-200'} px-4 py-3 flex gap-2 flex-shrink-0`}>
+      <form
+        onSubmit={handleSend}
+        className={`${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-gray-200'} px-4 py-3 flex gap-2 flex-shrink-0`}
+      >
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
           rows={1}
-          className={`${theme === 'dark' ? 'flex-1 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'flex-1 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none'}`}
+          className={`${
+            theme === 'dark'
+              ? 'flex-1 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none bg-slate-800 text-gray-100 placeholder:text-gray-300'
+              : 'flex-1 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none'
+          }`}
         />
         <button
           type="submit"

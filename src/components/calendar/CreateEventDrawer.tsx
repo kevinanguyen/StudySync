@@ -396,27 +396,80 @@ export default function CreateEventDrawer({
         </div>
 
         <fieldset className="flex flex-col gap-1.5">
-          <legend className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Visibility</legend>
+          <legend className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>
+            Visibility
+          </legend>
+
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="visibility" checked={visibility === 'private'} onChange={() => setVisibility('private')} />
-            <span className={`${theme === 'dark' ? 'text-gray-100' : ''}`}>Private — only you and invitees</span>
+            <input
+              type="radio"
+              name="visibility"
+              checked={visibility === 'private'}
+              onChange={() => setVisibility('private')}
+            />
+            <span className={theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}>
+              Private — only you and invitees
+            </span>
           </label>
+
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="visibility" checked={visibility === 'friends'} onChange={() => setVisibility('friends')} disabled={!courseId} />
-            <span className={`${!courseId ? (theme === 'dark' ? 'text-gray-400' : 'text-gray-400') : ''}`}>Friends in this course {!courseId && '(requires course)'}</span>
+            <input
+              type="radio"
+              name="visibility"
+              checked={visibility === 'friends'}
+              onChange={() => setVisibility('friends')}
+              disabled={!courseId}
+            />
+            <span
+              className={
+                !courseId
+                  ? 'text-gray-400'
+                  : theme === 'dark'
+                    ? 'text-gray-100'
+                    : 'text-gray-700'
+              }
+            >
+              Friends in this course {!courseId && '(requires course)'}
+            </span>
           </label>
+
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="visibility" checked={visibility === 'group'} onChange={() => setVisibility('group')} disabled={groups.length === 0} />
-            <span className={groups.length === 0 ? 'text-gray-400' : ''}>{theme === 'dark' ? `Group ${groups.length === 0 && '(no groups yet)'}` : `Group ${groups.length === 0 && '(no groups yet)'}`}</span>
+            <input
+              type="radio"
+              name="visibility"
+              checked={visibility === 'group'}
+              onChange={() => setVisibility('group')}
+              disabled={groups.length === 0}
+            />
+            <span
+              className={
+                groups.length === 0
+                  ? 'text-gray-400'
+                  : theme === 'dark'
+                    ? 'text-gray-100'
+                    : 'text-gray-700'
+              }
+            >
+              {groups.length === 0 ? 'Group (no groups yet)' : 'Group'}
+            </span>
           </label>
+
           {visibility === 'group' && (
             <select
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
-              className={`${theme === 'dark' ? 'ml-6 border border-slate-700 rounded-md px-2 py-1 text-sm bg-slate-800 text-gray-100' : 'ml-6 border border-gray-200 rounded-md px-2 py-1 text-sm bg-white'}`}
+              className={`${
+                theme === 'dark'
+                  ? 'ml-6 border border-slate-700 rounded-md px-2 py-1 text-sm bg-slate-800 text-gray-100'
+                  : 'ml-6 border border-gray-200 rounded-md px-2 py-1 text-sm bg-white text-gray-700'
+              }`}
             >
               <option value="">— Pick a group —</option>
-              {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
             </select>
           )}
         </fieldset>

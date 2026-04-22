@@ -130,7 +130,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
           {accepted.length === 0 ? (
             <p className={`${theme === 'dark' ? 'text-xs text-gray-100' : 'text-xs text-gray-500'}`}>You have no friends yet. You'll be the only member.</p>
           ) : (
-            <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700' : 'border border-gray-100'}`}>
+            <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700 bg-slate-900' : 'border border-gray-100 bg-white'}`}>
               {accepted.map((f) => {
                 const checked = selectedMembers.has(f.other.id);
                 return (
@@ -138,7 +138,15 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
                     <button
                       type="button"
                       onClick={() => toggleMember(f.other.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 transition-colors ${checked ? 'bg-blue-50' : ''}`}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
+                        theme === 'dark'
+                          ? checked
+                            ? 'bg-blue-500/15 hover:bg-blue-500/20'
+                            : 'hover:bg-slate-800'
+                          : checked
+                            ? 'bg-blue-50'
+                            : 'hover:bg-gray-50'
+                      }`}
                     >
                       <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
                       <span className={`flex-1 text-left text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</span>

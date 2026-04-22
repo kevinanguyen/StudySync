@@ -72,7 +72,11 @@ export default function EditCourseModal({ open, course, onClose, onSave }: EditC
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className={`${
+              theme === 'dark'
+                ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors disabled:opacity-50'
+                : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50'
+            }`}
           >
             Cancel
           </button>
@@ -90,20 +94,28 @@ export default function EditCourseModal({ open, course, onClose, onSave }: EditC
       {course && (
         <form id="edit-course-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course</span>
+            <span className={`text-xs font-semibold uppercase tracking-wide ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Course
+            </span>
             <div className="flex items-center gap-2">
               <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
-              <span className="text-sm font-bold text-gray-800">{course.code}</span>
-              <span className="text-sm text-gray-600">· {course.name}</span>
+              <span className={`text-sm font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
+                {course.code}
+              </span>
+              <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                · {course.name}
+              </span>
             </div>
-            <p className="text-[11px] text-gray-400 leading-relaxed">
+            <p className={`text-[11px] leading-relaxed ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}>
               Course code and name are global and shared with classmates. You can customize how
               it looks on your calendar below.
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-gray-700">Your color</span>
+            <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>
+              Your color
+            </span>
             <div className="flex gap-1.5 flex-wrap">
               {COLOR_PALETTE.map((c) => (
                 <button
@@ -112,7 +124,9 @@ export default function EditCourseModal({ open, course, onClose, onSave }: EditC
                   onClick={() => setColor(c)}
                   aria-label={`Color ${c}`}
                   className={`w-7 h-7 rounded-full transition-transform ${
-                    color === c ? 'ring-2 ring-offset-2 ring-gray-700 scale-110' : 'hover:scale-105'
+                    color === c
+                      ? `ring-2 ring-offset-2 scale-110 ${theme === 'dark' ? 'ring-gray-200 ring-offset-slate-900' : 'ring-gray-700'}`
+                      : 'hover:scale-105'
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -121,7 +135,9 @@ export default function EditCourseModal({ open, course, onClose, onSave }: EditC
           </div>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-gray-700">Instructor / nickname (optional)</span>
+            <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>
+              Instructor / nickname (optional)
+            </span>
             <input
               type="text"
               value={instructor}
@@ -129,7 +145,7 @@ export default function EditCourseModal({ open, course, onClose, onSave }: EditC
               placeholder="e.g. Prof. Smith, or a nickname for this class"
               className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
             />
-            <span className="text-[11px] text-gray-400">
+            <span className={`text-[11px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}>
               This label is just for you — classmates see their own instructor field.
             </span>
           </label>

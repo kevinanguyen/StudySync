@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import Avatar from '@/components/shared/Avatar';
@@ -39,6 +39,8 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const startRef = useRef<HTMLInputElement | null>(null);
+  const endRef = useRef<HTMLInputElement | null>(null);
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<EventVisibility>('private');
@@ -47,6 +49,7 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
+  const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
     if (event) {
@@ -155,7 +158,11 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
-                      className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                      className={`text-sm font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+                        theme === 'dark'
+                          ? 'text-gray-100 border-slate-700 hover:bg-slate-700/50'
+                          : 'text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
                     >
                       Cancel
                     </button>
@@ -185,20 +192,29 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
         {editing ? (
           <form id="event-edit-form" onSubmit={handleSave} className="flex flex-col gap-4" noValidate>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-700">Title</span>
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Title</span>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+                className={`rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                  theme === 'dark'
+                    ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                    : 'border border-gray-200 bg-white text-gray-900'
+                }`}
               />
             </label>
+
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-700">Course</span>
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course</span>
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
-                className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] bg-white"
+                className={`rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                  theme === 'dark'
+                    ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                    : 'border border-gray-200 bg-white text-gray-900'
+                }`}
               >
                 <option value="">— No course —</option>
                 {courses.map((c) => (
@@ -208,84 +224,155 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
                 ))}
               </select>
             </label>
+
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-700">Date</span>
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Date</span>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+                className={`date-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                  theme === 'dark'
+                    ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                    : 'border border-gray-200 bg-white text-gray-900'
+                }`}
               />
             </label>
+
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-gray-700">Start</span>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
-                />
+                <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Start</span>
+                <div className="relative w-full">
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    ref={startRef}
+                    className={`custom-time w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                      theme === 'dark'
+                        ? 'border border-slate-700 bg-slate-800 text-gray-100 pr-9'
+                        : 'border border-gray-200 bg-white text-gray-900 pr-9'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = startRef.current as HTMLInputElement | null;
+                      if (!el) return;
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      if ((el as any).showPicker) {
+                        try { (el as any).showPicker(); return; } catch (_) { /* ignore */ }
+                      }
+                      el.focus();
+                    }}
+                    aria-label="Open start time picker"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center ${theme === 'dark' ? 'text-gray-100' : 'text-black'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </div>
               </label>
+
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-gray-700">End</span>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
-                />
+                <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>End</span>
+                <div className="relative">
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    ref={endRef}
+                    className={`custom-time w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                      theme === 'dark'
+                        ? 'border border-slate-700 bg-slate-800 text-gray-100 pr-8'
+                        : 'border border-gray-200 bg-white text-gray-900 pr-8'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = endRef.current as HTMLInputElement | null;
+                      if (!el) return;
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      if ((el as any).showPicker) {
+                        try { (el as any).showPicker(); return; } catch (_) { /* ignore */ }
+                      }
+                      el.focus();
+                    }}
+                    aria-label="Open end time picker"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center ${theme === 'dark' ? 'text-gray-100' : 'text-black'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </div>
               </label>
             </div>
+
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-700">Location</span>
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Location</span>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+                className={`rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                  theme === 'dark'
+                    ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                    : 'border border-gray-200 bg-white text-gray-900'
+                }`}
               />
             </label>
+
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-700">Description</span>
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Description</span>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y"
+                className={`resize-y rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] ${
+                  theme === 'dark'
+                    ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                    : 'border border-gray-200 bg-white text-gray-900'
+                }`}
               />
             </label>
+
             <fieldset className="flex flex-col gap-1.5">
-              <legend className="text-xs font-semibold text-gray-700">Visibility</legend>
+              <legend className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Visibility</legend>
               <label className="flex items-center gap-2 text-sm">
                 <input type="radio" name="visibility" checked={visibility === 'private'} onChange={() => setVisibility('private')} />
-                <span>Private</span>
+                <span className={theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}>Private</span>
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="radio" name="visibility" checked={visibility === 'friends'} onChange={() => setVisibility('friends')} disabled={!courseId} />
-                <span className={!courseId ? 'text-gray-400' : ''}>Friends in this course</span>
+                <span className={!courseId ? 'text-gray-400' : theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}>
+                  Friends in this course
+                </span>
               </label>
             </fieldset>
+
             {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">{err}</div>}
           </form>
         ) : (
           <div className="flex flex-col gap-4 text-sm">
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Title</div>
-              <div className="text-base font-bold text-gray-800">{event.title}</div>
+              <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Title</div>
+              <div className={`text-base font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{event.title}</div>
             </div>
             {course && (
               <div>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Course</div>
+                <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Course</div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: course.color }} />
-                  <span className="text-gray-800">{course.code} · {course.name}</span>
+                  <span className={theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}>{course.code} · {course.name}</span>
                 </div>
               </div>
             )}
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">When</div>
-              <div className="text-gray-800">
+              <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>When</div>
+              <div className={theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}>
                 {new Date(event.start_at).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
                 <br />
                 {new Date(event.start_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} – {new Date(event.end_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
@@ -293,32 +380,32 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
             </div>
             {event.location && (
               <div>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Location</div>
-                <div className="text-gray-800">{event.location}</div>
+                <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Location</div>
+                <div className={theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}>{event.location}</div>
               </div>
             )}
             {event.description && (
               <div>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Description</div>
-                <div className="text-gray-800 whitespace-pre-wrap">{event.description}</div>
+                <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Description</div>
+                <div className={`whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{event.description}</div>
               </div>
             )}
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Visibility</div>
-              <div className="text-gray-800 capitalize">{event.visibility}</div>
+              <div className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Visibility</div>
+              <div className={`capitalize ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{event.visibility}</div>
             </div>
 
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Participants</div>
-              {participantsLoading && <p className="text-xs text-gray-400">Loading…</p>}
+              <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Participants</div>
+              {participantsLoading && <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}>Loading…</p>}
               {!participantsLoading && participants.length === 0 && (
-                <p className="text-xs text-gray-500 italic">No invitees.</p>
+                <p className={`text-xs italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No invitees.</p>
               )}
               <ul className="flex flex-col gap-1">
                 {participants.map((p) => (
                   <li key={p.participant.user_id} className="flex items-center gap-2">
                     <Avatar user={{ avatarColor: p.profile.avatar_color, initials: p.profile.initials }} size="sm" />
-                    <span className="text-sm text-gray-800 flex-1 truncate">{p.profile.name}</span>
+                    <span className={`text-sm flex-1 truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{p.profile.name}</span>
                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
                       p.participant.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
                       p.participant.status === 'declined' ? 'bg-gray-100 text-gray-600' :
@@ -353,7 +440,11 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
                   <button
                     type="button"
                     onClick={() => handleRespond('declined')}
-                    className="text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors"
+                    className={`text-xs font-semibold px-2.5 py-1 rounded transition-colors border ${
+                      theme === 'dark'
+                        ? 'text-gray-100 border-slate-700 hover:bg-slate-700/50'
+                        : 'text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }`}
                   >
                     Decline
                   </button>
@@ -362,12 +453,15 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
             )}
 
             {!isOwner && (
-              <p className="text-xs text-gray-500 italic">You can only view this event — it's owned by someone else.</p>
+              <p className={`text-xs italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                You can only view this event — it's owned by someone else.
+              </p>
             )}
             {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">{err}</div>}
           </div>
         )}
       </Drawer>
+
       <ConfirmDialog
         open={confirmDelete}
         title="Delete this event?"

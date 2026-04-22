@@ -3,6 +3,7 @@ import Avatar from '@/components/shared/Avatar';
 import { supabase } from '@/lib/supabase';
 import { getAvailableFriends, type FriendAvailability } from '@/lib/availability';
 import { expandClassMeetings } from '@/lib/time';
+import { useUIStore } from '@/store/uiStore';
 import type { EventRow, ExpandedClassMeeting } from '@/types/domain';
 import type { Tables } from '@/types/db';
 import type { FriendshipWithProfile } from '@/services/friends.service';
@@ -17,6 +18,7 @@ interface InviteePickerProps {
 export default function InviteePicker({ friends, range, selected, onToggle }: InviteePickerProps) {
   const [availability, setAvailability] = useState<FriendAvailability[]>([]);
   const [loading, setLoading] = useState(false);
+  const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
     if (!range || friends.length === 0) { setAvailability([]); return; }
@@ -75,14 +77,21 @@ export default function InviteePicker({ friends, range, selected, onToggle }: In
   }, [friends, range]);
 
   if (friends.length === 0) {
-    return <p className="text-xs text-gray-500">Add friends first to invite them.</p>;
+    return (
+      <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+        Add friends first to invite them.
+      </p>
+    );
   }
 
   const availByUser: Record<string, FriendAvailability> = {};
   for (const a of availability) availByUser[a.user_id] = a;
 
   return (
-    <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto border border-gray-100 rounded-md p-1">
+    <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 border ${
+        theme === 'dark' ? 'border-slate-700 bg-slate-900' : 'border-gray-100 bg-white'
+      }`}
+    >
       {friends.map((f) => {
         const checked = selected.has(f.other.id);
         const avail = availByUser[f.other.id];
@@ -92,11 +101,21 @@ export default function InviteePicker({ friends, range, selected, onToggle }: In
             <button
               type="button"
               onClick={() => onToggle(f.other.id)}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 transition-colors ${checked ? 'bg-blue-50' : ''}`}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
+                theme === 'dark'
+                  ? checked
+                    ? 'bg-blue-500/15 hover:bg-blue-500/20'
+                    : 'hover:bg-slate-800'
+                  : checked
+                    ? 'bg-blue-50'
+                    : 'hover:bg-gray-50'
+              }`}
             >
               <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">{f.other.name}</p>
+                <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
+                  {f.other.name}
+                </p>
                 {range && (loading ? (
                   <p className="text-[10px] text-gray-400">Checking…</p>
                 ) : hasConflict ? (

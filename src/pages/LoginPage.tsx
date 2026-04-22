@@ -4,11 +4,10 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import { signIn } from '@/services/auth.service';
 import { useUIStore } from '@/store/uiStore';
 
-const theme = useUIStore((s) => s.theme);
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useUIStore((s) => s.theme);
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
 
   const [email, setEmail] = useState('');

@@ -14,16 +14,23 @@ export function useAuthBootstrap() {
   useEffect(() => {
     let cancelled = false;
 
-    getCurrentSession().then(async (session) => {
-      if (cancelled) return;
-      setSession(session);
-      if (session) {
-        const profile = await fetchProfile(session.user.id);
-        if (!cancelled) setProfile(profile);
-      } else {
+    getCurrentSession()
+      .then(async (session) => {
+        if (cancelled) return;
+        setSession(session);
+        if (session) {
+          const profile = await fetchProfile(session.user.id);
+          if (!cancelled) setProfile(profile);
+        } else {
+          setProfile(null);
+        }
+      })
+      .catch((error) => {
+        console.error('Auth bootstrap failed:', error);
+        if (cancelled) return;
+        setSession(null);
         setProfile(null);
-      }
-    });
+      });
 
     const { data: sub } = onAuthChange(async (session) => {
       setSession(session);

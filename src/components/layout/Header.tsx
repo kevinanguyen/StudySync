@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
@@ -13,8 +13,10 @@ interface HeaderIconButtonProps {
 
 function HeaderIconButton({ label, onClick, children }: HeaderIconButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const suppressTooltipRef = useRef(false);
 
   function handleClick() {
+    suppressTooltipRef.current = true;
     setShowTooltip(false);
     onClick();
   }
@@ -22,10 +24,20 @@ function HeaderIconButton({ label, onClick, children }: HeaderIconButtonProps) {
   return (
     <div
       className="relative"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-      onFocus={() => setShowTooltip(true)}
-      onBlur={() => setShowTooltip(false)}
+      onMouseEnter={() => {
+        if (!suppressTooltipRef.current) setShowTooltip(true);
+      }}
+      onMouseLeave={() => {
+        suppressTooltipRef.current = false;
+        setShowTooltip(false);
+      }}
+      onFocus={() => {
+        if (!suppressTooltipRef.current) setShowTooltip(true);
+      }}
+      onBlur={() => {
+        suppressTooltipRef.current = false;
+        setShowTooltip(false);
+      }}
     >
       <button
         type="button"

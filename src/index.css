@@ -41,7 +41,7 @@
 
 .fc .fc-timegrid-slot {
   height: 2.5rem;
-  border-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 
 .fc .fc-timegrid-slot-label {
@@ -52,7 +52,7 @@
 }
 
 .fc .fc-timegrid-axis {
-  border: none !important;
+  border-color: #e2e8f0 !important;
 }
 
 .fc .fc-timegrid-col.fc-day-today {
@@ -90,7 +90,7 @@
   border: none;
 }
 
-.fc td, .fc th {
+.fc td, .fc th { 
   border-color: #e2e8f0 !important;
 }
 
@@ -172,4 +172,124 @@
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 2px;
+}
+
+/* Dark mode overrides for FullCalendar */
+.dark .fc {
+  color: #e6eef8;
+}
+
+.dark .fc .fc-col-header-cell {
+  background: #0f1724; /* slate-900-like */
+  border-bottom: 1px solid #1f2937 !important;
+}
+
+.dark .fc .fc-col-header-cell.fc-day-today {
+  background: rgba(59,91,219,0.06);
+}
+
+.dark .fc .fc-col-header-cell-cushion {
+  color: #c7d2fe;
+}
+
+.dark .fc .fc-timegrid-slot-label {
+  color: #94a3b8; /* slightly muted */
+}
+
+.dark .fc .fc-timegrid-col.fc-day-today {
+  background: rgba(59,91,219,0.06) !important;
+}
+
+.dark .fc td, .dark .fc th {
+  border-color: #1f2937 !important;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0b1220;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+/* Make placeholder text slightly darker in dark mode for better contrast */
+.dark input::placeholder,
+.dark textarea::placeholder,
+.dark select::placeholder {
+  color: #f7fafca8;
+  opacity: 1; /* ensure color isn't dimmed by browser defaults */
+}
+
+/* Legacy vendor selectors */
+.dark ::-webkit-input-placeholder { color: #cdcfd1; }
+.dark :-ms-input-placeholder { color: #cdcfd1; }
+.dark ::-ms-input-placeholder { color: #cdcfd1; }
+
+/* Hide native time picker indicator for inputs where we render a custom icon */
+input[type="time"].custom-time::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+input[type="time"].custom-time::-webkit-inner-spin-button,
+input[type="time"].custom-time::-webkit-clear-button {
+  display: none;
+}
+/* IE/Edge */
+input[type="time"].custom-time::-ms-clear,
+input[type="time"].custom-time::-ms-expand {
+  display: none;
+}
+
+.dark .date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* FullCalendar theme overrides */
+
+/* Light mode (optional tweak) */
+.fc-theme-custom {
+  --fc-border-color: #e5e7eb; /* gray-200 */
+}
+
+/* Dark mode */
+.dark-calendar {
+  --fc-border-color: #334155; /* slate-700 */
+  --fc-page-bg-color: #0f172a; /* slate-900 */
+  --fc-neutral-bg-color: #1e293b; /* slate-800 */
+}
+
+/* Force grid lines to use the dark color */
+.dark-calendar .fc-timegrid-slot,
+.dark-calendar .fc-timegrid-axis,
+.dark-calendar .fc-timegrid-col {
+  border-color: #334155 !important;
+}
+
+.dark .fc .fc-scrollgrid td,
+.dark .fc .fc-scrollgrid th,
+.dark .fc .fc-timegrid-slot,
+.dark .fc .fc-timegrid-axis,
+.dark .fc .fc-col-header-cell,
+.dark .fc td,
+.dark .fc th {
+  border-color: #1f2937 !important;
+}
+
+/* invert the current-time indicator */
+.dark .fc .fc-timegrid-now-indicator-line {
+  background: #0f172a;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.dark .fc .fc-timegrid-now-indicator-line::before {
+  background: #0f172a;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.dark .fc .fc-timegrid-now-indicator-arrow {
+  background: #0f172a;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+  border-left-color: rgba(255, 255, 255, 0.8);
+  border-right-color: rgba(255, 255, 255, 0.8);
 }

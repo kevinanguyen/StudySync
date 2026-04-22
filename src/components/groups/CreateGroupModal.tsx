@@ -25,6 +25,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
+  const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
     if (open) {
@@ -69,7 +70,11 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
       title="Create a group"
       footer={
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
+          <button
+            type="button"
+            onClick={onClose}
+            className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors' : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors'}`}
+          >
             Cancel
           </button>
           <button
@@ -85,23 +90,23 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
     >
       <form id="create-group-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Name <span className="text-red-500">*</span></span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Name <span className="text-red-500">*</span></span>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. HCI Study Group"
             autoFocus
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Course (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course (optional)</span>
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] bg-white"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           >
             <option value="">— No course —</option>
             {courses.map((c) => (
@@ -111,21 +116,21 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Description (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Description (optional)</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y`}
           />
         </label>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Invite friends (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Invite friends (optional)</span>
           {accepted.length === 0 ? (
-            <p className="text-xs text-gray-500">You have no friends yet. You'll be the only member.</p>
+            <p className={`${theme === 'dark' ? 'text-xs text-gray-100' : 'text-xs text-gray-500'}`}>You have no friends yet. You'll be the only member.</p>
           ) : (
-            <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto border border-gray-100 rounded-md p-1">
+            <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700' : 'border border-gray-100'}`}>
               {accepted.map((f) => {
                 const checked = selectedMembers.has(f.other.id);
                 return (
@@ -136,7 +141,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
                       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 transition-colors ${checked ? 'bg-blue-50' : ''}`}
                     >
                       <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
-                      <span className="flex-1 text-left text-sm font-medium text-gray-800 truncate">{f.other.name}</span>
+                      <span className={`flex-1 text-left text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</span>
                       <input type="checkbox" checked={checked} onChange={() => {}} className="pointer-events-none" />
                     </button>
                   </li>

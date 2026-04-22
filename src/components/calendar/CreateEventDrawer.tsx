@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import { useCourses } from '@/hooks/useCourses';
 import { useAuthStore } from '@/store/authStore';
@@ -59,6 +59,8 @@ export default function CreateEventDrawer({
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const startRef = useRef<HTMLInputElement | null>(null);
+  const endRef = useRef<HTMLInputElement | null>(null);
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<EventVisibility>('private');
@@ -67,6 +69,7 @@ export default function CreateEventDrawer({
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const showToast = useUIStore((s) => s.showToast);
+  const theme = useUIStore((s) => s.theme);
 
   // Seed form when draft changes
   useEffect(() => {
@@ -184,7 +187,7 @@ export default function CreateEventDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+            className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors' : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors'}`}
           >
             Cancel
           </button>
@@ -201,22 +204,22 @@ export default function CreateEventDrawer({
     >
       <form id="create-event-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Title</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Title</span>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Course (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course (optional)</span>
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] bg-white"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           >
             <option value="">— No course —</option>
             {courses.map((c) => (
@@ -228,33 +231,81 @@ export default function CreateEventDrawer({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Date</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Date</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`date-input ${
+              theme === 'dark'
+                ? 'border border-slate-700 bg-slate-800 text-gray-100'
+                : 'border border-gray-200'
+            } rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-gray-700">Start</span>
+            <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Start</span>
+            <div className="relative w-full">
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+              ref={startRef}
+              className={`w-full ${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 pr-9' : 'border border-gray-200 pr-9'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] custom-time`}
             />
+              <button
+                type="button"
+                onClick={() => {
+                  const el = startRef.current as HTMLInputElement | null;
+                  if (!el) return;
+                  // prefer showPicker where available
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  if ((el as any).showPicker) {
+                    try { (el as any).showPicker(); return; } catch (_) { /* ignore */ }
+                  }
+                  el.focus();
+                }}
+                aria-label="Open start time picker"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center ${theme === 'dark' ? 'text-gray-100' : 'text-black'}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-gray-700">End</span>
-            <input
+            <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>End</span>
+            <div className="relative">
+              <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+              ref={endRef}
+              className={`w-full ${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 pr-8' : 'border border-gray-200 pr-8'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] custom-time`}
             />
+              <button
+                type="button"
+                onClick={() => {
+                  const el = endRef.current as HTMLInputElement | null;
+                  if (!el) return;
+                  // prefer showPicker where available
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  if ((el as any).showPicker) {
+                    try { (el as any).showPicker(); return; } catch (_) { /* ignore */ }
+                  }
+                  el.focus();
+                }}
+                aria-label="Open end time picker"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center ${theme === 'dark' ? 'text-gray-100' : 'text-black'}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
           </label>
         </div>
 
@@ -299,7 +350,7 @@ export default function CreateEventDrawer({
               <button
                 type="button"
                 onClick={() => { /* user dismisses by submitting the form as usual */ }}
-                className="text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors"
+                className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-100 border border-slate-700 hover:bg-slate-700/50 px-2.5 py-1 rounded transition-colors' : 'text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 px-2.5 py-1 rounded transition-colors'}`}
               >
                 Create separately
               </button>
@@ -308,28 +359,28 @@ export default function CreateEventDrawer({
         )}
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Location (optional)</span>
+          <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Location (optional)</span>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Library room 214 or zoom link"
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Description (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Description (optional)</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y`}
           />
         </label>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Invite friends (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Invite friends (optional)</span>
           <InviteePicker
             friends={friends}
             range={range}
@@ -345,24 +396,24 @@ export default function CreateEventDrawer({
         </div>
 
         <fieldset className="flex flex-col gap-1.5">
-          <legend className="text-xs font-semibold text-gray-700">Visibility</legend>
+          <legend className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Visibility</legend>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" name="visibility" checked={visibility === 'private'} onChange={() => setVisibility('private')} />
-            <span>Private — only you and invitees</span>
+            <span className={`${theme === 'dark' ? 'text-gray-100' : ''}`}>Private — only you and invitees</span>
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" name="visibility" checked={visibility === 'friends'} onChange={() => setVisibility('friends')} disabled={!courseId} />
-            <span className={!courseId ? 'text-gray-400' : ''}>Friends in this course {!courseId && '(requires course)'}</span>
+            <span className={`${!courseId ? (theme === 'dark' ? 'text-gray-400' : 'text-gray-400') : ''}`}>Friends in this course {!courseId && '(requires course)'}</span>
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" name="visibility" checked={visibility === 'group'} onChange={() => setVisibility('group')} disabled={groups.length === 0} />
-            <span className={groups.length === 0 ? 'text-gray-400' : ''}>Group {groups.length === 0 && '(no groups yet)'}</span>
+            <span className={groups.length === 0 ? 'text-gray-400' : ''}>{theme === 'dark' ? `Group ${groups.length === 0 && '(no groups yet)'}` : `Group ${groups.length === 0 && '(no groups yet)'}`}</span>
           </label>
           {visibility === 'group' && (
             <select
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
-              className="ml-6 border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
+              className={`${theme === 'dark' ? 'ml-6 border border-slate-700 rounded-md px-2 py-1 text-sm bg-slate-800 text-gray-100' : 'ml-6 border border-gray-200 rounded-md px-2 py-1 text-sm bg-white'}`}
             >
               <option value="">— Pick a group —</option>
               {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}

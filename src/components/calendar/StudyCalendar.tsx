@@ -12,6 +12,7 @@ import { useAuthStore } from '@/store/authStore';
 import CreateEventDrawer from './CreateEventDrawer';
 import EventDetailsPanel from './EventDetailsPanel';
 import type { EventRow, EventOwnerInfo } from '@/types/domain';
+import { useUIStore } from '@/store/uiStore';
 
 /** Look up the user's personal color for a course. Falls back to a neutral grey for uncategorized events. */
 function getCourseColor(courseId: string | null, courses: { id: string; color: string }[]): string {
@@ -66,6 +67,7 @@ export default function StudyCalendar() {
 
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const centralClock = useCentralClock();
+  const theme = useUIStore((s) => s.theme);
 
   const expandedMeetings = useMemo(() => expandClassMeetings(classMeetings, weekStart), [classMeetings, weekStart]);
 
@@ -167,37 +169,53 @@ export default function StudyCalendar() {
   function navToday() { calRef.current?.getApi().today(); }
 
   return (
-    <div className="flex flex-col flex-1 min-w-0 bg-white overflow-hidden">
-      <div className="flex items-center flex-wrap gap-2 px-5 py-3 border-b border-gray-100 flex-shrink-0">
-        <h2 className="text-2xl font-bold text-gray-800 mr-1">This Week</h2>
+<div
+  className={`flex flex-col flex-1 min-w-0 overflow-hidden ${
+    theme === 'dark' ? 'dark bg-slate-900' : 'bg-white'
+  }`}
+>
+        <div className={`flex items-center flex-wrap gap-2 px-5 py-3 flex-shrink-0 ${theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-gray-100'}`}>
+        <h2 className={`text-2xl font-bold mr-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>This Week</h2>
         <button onClick={navPrev} aria-label="Previous week" className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-sm font-medium text-gray-500 min-w-[150px] text-center select-none">{weekRange}</span>
+  <span className={`text-sm font-medium min-w-[150px] text-center select-none ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>{weekRange}</span>
         <button onClick={navNext} aria-label="Next week" className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
         <span
-          className="ml-auto text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded select-none tabular-nums"
+          className={`${theme === 'dark' ? 'ml-auto text-[11px] font-semibold text-gray-300 bg-slate-800 px-2 py-1 rounded select-none tabular-nums' : 'ml-auto text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded select-none tabular-nums'}`}
           title="Current time in Central Time"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block mr-1.5 align-middle" aria-hidden />
+          <span
+            className="inline-block mr-1.5 align-middle rounded-full"
+            style={{
+              width: '8px',
+              height: '8px',
+              background: theme === 'dark' ? '#0f172a' : '#ffffff', // invert fill
+              border:
+                theme === 'dark'
+                  ? '2px solid rgba(255,255,255,0.8)' // light border
+                  : '2px solid rgba(17,24,39,0.85)', // dark border
+              boxSizing: 'border-box',
+            }}
+          />
           {centralClock} CST
         </span>
         <button
           type="button"
           onClick={() => setCreateDraft({ start: new Date(), end: new Date(Date.now() + 60 * 60 * 1000) })}
-          className="text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors"
+          className={`${theme === 'dark' ? 'text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors' : 'text-xs font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded transition-colors'}`}
         >
           + New Event
         </button>
         <button
           onClick={navToday}
-          className="text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium"
+          className={`${theme === 'dark' ? 'text-xs text-[#9AB0FF] border border-[#3B5BDB]/30 px-3 py-1 rounded hover:bg-blue-900/10 transition-colors font-medium' : 'text-xs text-[#3B5BDB] border border-[#3B5BDB]/40 px-3 py-1 rounded hover:bg-blue-50 transition-colors font-medium'}`}
         >
           Today
         </button>

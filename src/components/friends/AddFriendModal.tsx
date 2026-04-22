@@ -21,6 +21,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
   const [err, setErr] = useState<string | null>(null);
   const [sending, setSending] = useState<string | null>(null);
   const showToast = useUIStore((s) => s.showToast);
+  const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
     if (open) { setQuery(''); setResults([]); setErr(null); }
@@ -63,35 +64,35 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
     <Drawer open={open} onClose={onClose} title="Add a friend">
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Search by username or school email</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Search by username or school email</span>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. alice or alice@school.edu"
             autoFocus
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
-        {searching && <p className="text-xs text-gray-400">Searching…</p>}
+        {searching && <p className={`text-xs ${theme === 'dark' ? 'text-gray-100' : 'text-gray-400'}`}>Searching…</p>}
 
         {!searching && query.trim() && results.length === 0 && (
-          <p className="text-xs text-gray-500">No users found. Try their full username or school email.</p>
+          <p className={`text-xs ${theme === 'dark' ? 'text-gray-100' : 'text-gray-500'}`}>No users found. Try their full username or school email.</p>
         )}
 
         <ul className="flex flex-col gap-2">
           {results.map((p) => {
             const already = existingIds.has(p.id);
             return (
-              <li key={p.id} className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-md px-3 py-2">
+              <li key={p.id} className={`flex items-center gap-3 rounded-md px-3 py-2 ${theme === 'dark' ? 'bg-slate-700 border border-slate-700' : 'bg-gray-50 border border-gray-100'}`}>
                 <Avatar user={{ avatarColor: p.avatar_color, initials: p.initials, status: p.status }} size="md" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{p.name}</p>
-                  <p className="text-[11px] text-gray-500 truncate">@{p.username}</p>
+                  <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{p.name}</p>
+                  <p className={`text-[11px] truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-500'}`}>@{p.username}</p>
                 </div>
                 {already ? (
-                  <span className="text-xs text-gray-500 italic">Already connected</span>
+                  <span className={`text-xs italic ${theme === 'dark' ? 'text-gray-100' : 'text-gray-500'}`}>Already connected</span>
                 ) : (
                   <button
                     type="button"

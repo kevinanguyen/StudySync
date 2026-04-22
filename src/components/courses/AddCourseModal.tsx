@@ -28,6 +28,7 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
+  const theme = useUIStore((s) => s.theme);
 
   // Reset on open
   useEffect(() => {
@@ -122,7 +123,7 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+            className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors' : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors'}`}
           >
             Cancel
           </button>
@@ -139,37 +140,37 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
     >
       <form id="add-course-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Course code <span className="text-red-500">*</span></span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course code <span className="text-red-500">*</span></span>
           <input
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="e.g. CS4063"
             autoFocus
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] uppercase"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-[#3451c7] placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] uppercase`}
           />
           {lookupResult === 'exists' && (
             <span className="text-xs text-emerald-600">✓ Found — joining existing course</span>
           )}
           {lookupResult === 'new' && (
-            <span className="text-xs text-gray-500">New course — you'll be the first to add it</span>
+            <span className={`text-xs ${theme === 'dark' ? 'text-gray-100' : 'text-gray-500'}`}>New course — you'll be the first to add it</span>
           )}
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Course name <span className="text-red-500">*</span></span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course name <span className="text-red-500">*</span></span>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. HCI Design"
             disabled={lookupResult === 'exists'}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] disabled:bg-gray-50 disabled:text-gray-600"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300 disabled:bg-slate-700 disabled:text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Your color</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Your color</span>
           <div className="flex gap-1.5 flex-wrap">
             {COLOR_PALETTE.map((c) => (
               <button
@@ -187,12 +188,12 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Instructor (optional)</span>
+          <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Instructor (optional)</span>
           <input
             type="text"
             value={instructor}
             onChange={(e) => setInstructor(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
 

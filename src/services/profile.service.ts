@@ -64,7 +64,15 @@ export async function updateStatus(userId: string, status: UserStatus, statusTex
 
 /** Change password via Supabase auth. User must have a current session. */
 export async function changePassword(newPassword: string): Promise<void> {
-  if (newPassword.length < 8) throw new ProfileServiceError('Password must be at least 8 characters.');
+  if (newPassword.length < 8) {
+    throw new ProfileServiceError('Password must be at least 8 characters.');
+  }
+
+  console.log('before updateUser');
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) throw new ProfileServiceError(error.message, error);
+  console.log('after updateUser', error);
+
+  if (error) {
+    throw new ProfileServiceError(error.message, error);
+  }
 }

@@ -87,6 +87,10 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   return data as unknown as Profile;
 }
 
-export function onAuthChange(callback: (session: Session | null) => void) {
-  return supabase.auth.onAuthStateChange((_event, session) => callback(session));
+export function onAuthChange(callback: (session: Session | null) => void | Promise<void>) {
+  return supabase.auth.onAuthStateChange((_event, session) => {
+    Promise.resolve(callback(session)).catch((error) => {
+      console.error('onAuthChange callback failed:', error);
+    });
+  });
 }

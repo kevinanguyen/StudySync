@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useUIStore } from '@/store/uiStore';
 
 interface AuthLayoutProps {
   title: string;
@@ -8,8 +9,9 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
+  const theme = useUIStore((s) => s.theme);
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-lg bg-[#3B5BDB] flex items-center justify-center">
@@ -19,17 +21,17 @@ export default function AuthLayout({ title, subtitle, children, footer }: AuthLa
               <path d="M7 3C8.5 2 10.2 2 12 2C13.8 2 15.5 2 17 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <span className="text-2xl font-bold text-gray-800 tracking-tight">StudySync</span>
+          <span className={`${theme === 'dark' ? 'text-2xl font-bold text-gray-100 tracking-tight' : 'text-2xl font-bold text-gray-800 tracking-tight'}`}>StudySync</span>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-500 mb-6">{subtitle}</p>}
+        <div className={`${theme === 'dark' ? 'rounded-xl shadow-sm p-8 bg-slate-800 border border-slate-700' : 'bg-white rounded-xl shadow-sm border border-gray-200 p-8'}`}>
+          <h1 className={`${theme === 'dark' ? 'text-2xl font-bold text-gray-100 mb-1' : 'text-2xl font-bold text-gray-800 mb-1'}`}>{title}</h1>
+          {subtitle && <p className={`${theme === 'dark' ? 'text-sm text-gray-300 mb-6' : 'text-sm text-gray-500 mb-6'}`}>{subtitle}</p>}
           {!subtitle && <div className="mb-4" />}
           {children}
         </div>
 
-        {footer && <div className="text-center mt-6 text-sm text-gray-600">{footer}</div>}
+        {footer && <div className={`${theme === 'dark' ? 'text-center mt-6 text-sm text-gray-400' : 'text-center mt-6 text-sm text-gray-600'}`}>{footer}</div>}
       </div>
     </div>
   );

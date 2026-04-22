@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useUIStore } from '@/store/uiStore';
 
 interface EmptyStateProps {
   icon: ReactNode;
@@ -17,6 +18,7 @@ interface EmptyStateProps {
  * around a stroke icon so the empty state has presence without being loud.
  */
 export default function EmptyState({ icon, title, description, action, compact = false }: EmptyStateProps) {
+  const theme = useUIStore((s) => s.theme);
   return (
     <div className={`flex flex-col items-center text-center ${compact ? 'px-2 py-3' : 'px-4 py-6'}`}>
       <div
@@ -26,11 +28,11 @@ export default function EmptyState({ icon, title, description, action, compact =
       >
         {icon}
       </div>
-      <p className={`font-semibold text-gray-700 leading-snug ${compact ? 'text-[11px]' : 'text-sm'}`}>
+      <p className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'} leading-snug ${compact ? 'text-[11px]' : 'text-sm'}`}>
         {title}
       </p>
       {description && (
-        <p className={`text-gray-500 mt-1 leading-relaxed ${compact ? 'text-[10px]' : 'text-xs'}`}>
+        <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} mt-1 leading-relaxed ${compact ? 'text-[10px]' : 'text-xs'}`}>
           {description}
         </p>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import Avatar from '@/components/shared/Avatar';
+import { useUIStore } from '@/store/uiStore';
 import { useMessages } from '@/hooks/useMessages';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/lib/supabase';
@@ -26,6 +27,7 @@ export default function GroupChat({ groupId }: GroupChatProps) {
   const [submitting, setSubmitting] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const theme = useUIStore((s) => s.theme);
 
   useEffect(() => {
     const missing = messages.map((m) => m.author_id).filter((id) => !(id in profiles));
@@ -97,14 +99,14 @@ export default function GroupChat({ groupId }: GroupChatProps) {
         })}
       </div>
 
-      <form onSubmit={handleSend} className="border-t border-gray-200 px-4 py-3 flex gap-2 flex-shrink-0">
+      <form onSubmit={handleSend} className={`${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-gray-200'} px-4 py-3 flex gap-2 flex-shrink-0`}>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
           rows={1}
-          className="flex-1 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none"
+          className={`${theme === 'dark' ? 'flex-1 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'flex-1 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-none'}`}
         />
         <button
           type="submit"

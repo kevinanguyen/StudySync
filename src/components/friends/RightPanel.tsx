@@ -27,6 +27,7 @@ export default function RightPanel() {
   const showToast = useUIStore((s) => s.showToast);
   const [unfriendTarget, setUnfriendTarget] = useState<FriendshipWithProfile | null>(null);
   const [profileTarget, setProfileTarget] = useState<Profile | null>(null);
+  const theme = useUIStore((s) => s.theme);
 
   async function handleConfirmUnfriend() {
     if (!unfriendTarget) return;
@@ -50,10 +51,13 @@ export default function RightPanel() {
   const displayedFriends = showMoreFriends ? filteredFriends : filteredFriends.slice(0, FRIEND_LIMIT);
 
   return (
-    <aside className="flex flex-col bg-white border-l border-gray-200" style={{ width: '210px', minWidth: '210px' }}>
+    <aside
+      className={`flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-l border-slate-700' : 'bg-white border-l border-gray-200'}`}
+      style={{ width: '210px', minWidth: '210px' }}
+    >
       {/* Search */}
       <div className="px-3 pt-3 pb-2 flex-shrink-0">
-        <div className="flex items-center gap-1.5 border border-gray-200 rounded px-2 py-1.5 bg-gray-50 focus-within:ring-1 focus-within:ring-blue-300">
+  <div className={`${theme === 'dark' ? 'flex items-center gap-1.5 border border-slate-700 rounded px-2 py-1.5 bg-slate-800 focus-within:ring-1 focus-within:ring-blue-300' : 'flex items-center gap-1.5 border border-gray-200 rounded px-2 py-1.5 bg-gray-50 focus-within:ring-1 focus-within:ring-blue-300'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -62,7 +66,7 @@ export default function RightPanel() {
             placeholder="Search friends…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-xs text-gray-700 placeholder-gray-400 focus:outline-none flex-1 min-w-0"
+            className={`${theme === 'dark' ? 'bg-transparent text-xs text-gray-200 placeholder:text-gray-300 focus:outline-none flex-1 min-w-0' : 'bg-transparent text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none flex-1 min-w-0'}`}
           />
         </div>
       </div>
@@ -71,13 +75,13 @@ export default function RightPanel() {
         {/* FRIENDS */}
         <div className="px-3 pt-2 pb-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Friends</span>
+              <div className="flex items-center gap-1">
+              <span className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>Friends</span>
               <button
                 type="button"
                 onClick={() => setAddFriendOpen(true)}
                 aria-label="Add friend"
-                className="w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200"
+                className={`${theme === 'dark' ? 'w-4 h-4 rounded-full bg-slate-800 text-gray-300 text-[11px] font-bold flex items-center justify-center hover:bg-slate-700 transition-colors leading-none border border-slate-700' : 'w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200'}`}
               >
                 +
               </button>
@@ -93,7 +97,7 @@ export default function RightPanel() {
               )}
             </div>
             {filteredFriends.length > FRIEND_LIMIT && (
-              <button className="text-[10px] text-[#3B5BDB] font-semibold hover:underline" onClick={() => setShowMoreFriends((v) => !v)}>
+              <button className={`${theme === 'dark' ? 'text-[10px] text-[#9AB0FF] font-semibold hover:underline' : 'text-[10px] text-[#3B5BDB] font-semibold hover:underline'}`} onClick={() => setShowMoreFriends((v) => !v)}>
                 {showMoreFriends ? 'SHOW LESS' : 'SHOW MORE'}
               </button>
             )}
@@ -124,12 +128,12 @@ export default function RightPanel() {
             {displayedFriends.map((f) => {
               const cfg = statusConfig[f.other.status];
               return (
-                <div key={f.other.id} className="group relative flex items-center rounded-md hover:bg-gray-50 transition-colors">
+                <div key={f.other.id} className={`group relative flex items-center rounded-md transition-colors ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}>
                   <button
                     type="button"
                     onClick={() => setProfileTarget(f.other)}
                     aria-label={`View ${f.other.name}'s profile`}
-                    className="flex items-center gap-2 px-1.5 py-1.5 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 rounded-md"
+                    className={`flex items-center gap-2 px-1.5 py-1.5 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 rounded-md ${theme === 'dark' ? 'text-gray-100' : ''}`}
                   >
                     <div className="relative flex-shrink-0">
                       <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
@@ -139,7 +143,7 @@ export default function RightPanel() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{f.other.name}</p>
+                      <p className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-100 leading-tight truncate' : 'text-xs font-semibold text-gray-800 leading-tight truncate'}`}>{f.other.name}</p>
                       <p className="text-[10px] truncate" style={{ color: cfg.color }}>
                         {f.other.status_text ?? cfg.label}
                       </p>
@@ -149,7 +153,7 @@ export default function RightPanel() {
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setUnfriendTarget(f); }}
                     aria-label={`Unfriend ${f.other.name}`}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 px-1 py-1.5"
+                    className={`${theme === 'dark' ? 'opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-500 px-1 py-1.5' : 'opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 px-1 py-1.5'}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -165,12 +169,12 @@ export default function RightPanel() {
         <div className="px-3 pt-1 pb-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Groups</span>
+              <span className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>Groups</span>
               <button
                 type="button"
                 onClick={() => setCreateGroupOpen(true)}
                 aria-label="Create group"
-                className="w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200"
+                className={`${theme === 'dark' ? 'w-4 h-4 rounded-full bg-slate-800 text-gray-300 text-[11px] font-bold flex items-center justify-center hover:bg-slate-700 transition-colors leading-none border border-slate-700' : 'w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200'}`}
               >
                 +
               </button>
@@ -198,7 +202,7 @@ export default function RightPanel() {
                 key={g.id}
                 type="button"
                 onClick={() => navigate(`/groups/${g.id}`)}
-                className="flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors text-left"
+                className={`flex items-center gap-2 px-1.5 py-1.5 rounded-md transition-colors cursor-pointer text-left ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}
               >
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
@@ -207,7 +211,7 @@ export default function RightPanel() {
                   {g.initials}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{g.name}</p>
+                  <p className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-100 leading-tight truncate' : 'text-xs font-semibold text-gray-800 leading-tight truncate'}`}>{g.name}</p>
                 </div>
               </button>
             ))}

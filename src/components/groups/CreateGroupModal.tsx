@@ -1,12 +1,10 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
-import Avatar from '@/components/shared/Avatar';
 import { useCourses } from '@/hooks/useCourses';
 import { useFriends } from '@/hooks/useFriends';
 import { useUIStore } from '@/store/uiStore';
 import type { Group, GroupInput } from '@/services/groups.service';
-import { filterFriends } from '@/lib/search';
-
+import FriendMultiSelect from '@/components/shared/FriendMultiSelect';
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -24,7 +22,6 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
   const [description, setDescription] = useState('');
   const [courseId, setCourseId] = useState<string | ''>('');
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-  const [query, setQuery] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
@@ -32,7 +29,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
 
   useEffect(() => {
     if (open) {
-      setName(''); setDescription(''); setCourseId(''); setSelectedMembers(new Set()); setQuery(''); setErr(null);
+      setName(''); setDescription(''); setCourseId(''); setSelectedMembers(new Set()); setErr(null);
     }
   }, [open]);
 
@@ -61,8 +58,6 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
       setSubmitting(false);
     }
   }
-
-const filteredFriends = filterFriends(accepted, query);
 
   return (
     <Drawer
@@ -99,41 +94,7 @@ const filteredFriends = filterFriends(accepted, query);
 
         <div className="flex flex-col gap-1.5">
           <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Invite friends (optional)</span>
-          {accepted.length === 0 ? (
-            <p className={`${theme === 'dark' ? 'text-xs text-gray-100' : 'text-xs text-gray-500'}`}>You have no friends yet. You'll be the only member.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {selectedMembers.size > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {accepted.filter((f) => selectedMembers.has(f.other.id)).map((f) => (
-                    <button key={f.other.id} type="button" onClick={() => toggleMember(f.other.id)} className={`${theme === 'dark' ? 'bg-slate-800 text-gray-200' : 'bg-gray-100 text-gray-700'} text-xs px-2 py-1 rounded-full`}>
-                      {f.other.name} ×
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search friends to invite…" className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`} />
-
-              <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700 bg-slate-900' : 'border border-gray-100 bg-white'}`}>
-                {filteredFriends.map((f) => {
-                  const checked = selectedMembers.has(f.other.id);
-                  return (
-                    <li key={f.other.id}>
-                      <button type="button" onClick={() => toggleMember(f.other.id)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${theme === 'dark' ? checked ? 'bg-blue-500/15 hover:bg-blue-500/20' : 'hover:bg-slate-800' : checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                        <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
-                        <div className="flex-1 text-left min-w-0">
-                          <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</p>
-                          <p className={`text-[10px] truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{f.other.username}</p>
-                        </div>
-                        <input type="checkbox" checked={checked} onChange={() => {}} className="pointer-events-none" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+          <FriendMultiSelect friends={accepted} selected={selectedMembers} onToggle={toggleMember} emptyMessage="You have no friends yet. You'll be the only member." />
         </div>
 
         {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">{err}</div>}

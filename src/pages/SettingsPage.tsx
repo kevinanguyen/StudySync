@@ -18,6 +18,9 @@ export default function SettingsPage() {
   const resetAuth = useAuthStore((s) => s.reset);
   const showToast = useUIStore((s) => s.showToast);
   const theme = useUIStore((s) => s.theme);
+  // UI scale
+  const textScale = useUIStore((s) => s.textScale);
+  const setTextScale = useUIStore((s) => s.setTextScale);
 
   // Profile form
   const [name, setName] = useState('');
@@ -110,7 +113,11 @@ export default function SettingsPage() {
       await changePassword(newPassword);
       setNewPassword('');
       setConfirmPassword('');
-      showToast({ level: 'success', message: 'Password updated' });
+      showToast({
+        level: 'success',
+        message: 'Password updated',
+        duration: 5000,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to change password.';
       setPasswordErr(msg);
@@ -152,7 +159,7 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1.5">
-                  <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Name <span className="text-red-500">*</span></span>
+                  <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Name <span className="text-red-500">*</span></span>
                   <input
                     type="text"
                     value={name}
@@ -161,7 +168,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Username <span className="text-red-500">*</span></span>
+                  <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Username <span className="text-red-500">*</span></span>
                   <input
                     type="text"
                     value={username}
@@ -170,7 +177,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Major (optional)</span>
+                  <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Major (optional)</span>
                   <input
                     type="text"
                     value={major}
@@ -179,7 +186,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Grad year (optional)</span>
+                  <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Grad year (optional)</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -191,8 +198,8 @@ export default function SettingsPage() {
                 </label>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Avatar color</span>
+              <div className="flex flex-col gap-3">
+                <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Avatar color</span>
                 <div className="flex gap-1.5 flex-wrap">
                   {AVATAR_PALETTE.map((c) => (
                     <button
@@ -230,9 +237,9 @@ export default function SettingsPage() {
           {/* Availability */}
           <section className={`${theme === 'dark' ? 'bg-slate-800 rounded-xl border border-slate-700 p-6' : 'bg-white rounded-xl border border-gray-200 p-6'}`}>
             <h2 className={`${theme === 'dark' ? 'text-lg font-bold text-gray-100 mb-4' : 'text-lg font-bold text-gray-800 mb-4'}`}>Availability</h2>
-            <form onSubmit={handleStatusSubmit} className="flex flex-col gap-4" noValidate>
-                <fieldset className="flex flex-col gap-2">
-                <legend className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Status</legend>
+            <form onSubmit={handleStatusSubmit} className="flex flex-col gap-3 mb-6" noValidate>
+                <div className="flex flex-col gap-1">
+                  <h3 className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300 uppercase tracking-wide' : 'text-xs font-semibold text-gray-700 uppercase tracking-wide'}`}>Status</h3>
                 {(Object.keys(statusConfig) as UserStatus[]).map((s) => (
                   <label key={s} className={`flex items-center gap-2 text-sm ${ theme === 'dark' ? 'text-gray-100' : 'text-gray-800' }`}
                   >
@@ -241,10 +248,10 @@ export default function SettingsPage() {
                     <span>{statusConfig[s].label}</span>
                   </label>
                 ))}
-              </fieldset>
+              </div>
 
-              <label className="flex flex-col gap-1.5">
-                <span className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300' : 'text-xs font-semibold text-gray-700'}`}>Status note (optional)</span>
+              <label className="flex flex-col gap-3">
+                <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Status Note (optional)</span>
                 <input
                   type="text"
                   value={statusText}
@@ -267,12 +274,39 @@ export default function SettingsPage() {
             </form>
           </section>
 
+          {/* UI Scale */}
+          <section className={`${theme === 'dark' ? 'bg-slate-800 rounded-xl border border-slate-700 p-6' : 'bg-white rounded-xl border border-gray-200 p-6'}`}>
+            <h2 className={`${theme === 'dark' ? 'text-lg font-bold text-gray-100 mb-4' : 'text-lg font-bold text-gray-800 mb-4'}`}>Accessibility</h2>
+
+            <div className="flex flex-col gap-3 mb-6">
+              <h3 className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300 uppercase tracking-wide' : 'text-xs font-semibold text-gray-700 uppercase tracking-wide'}`}>Text and display</h3>
+              <div className="flex gap-2">
+                {[1, 1.1, 1.25, 1.5].map((scale) => (
+                  <button
+                    key={scale}
+                    type="button"
+                    onClick={() => setTextScale(scale)}
+                    className={`px-3 py-1.5 rounded text-sm font-semibold ${
+                      textScale === scale
+                        ? 'bg-[#3B5BDB] text-white'
+                        : theme === 'dark'
+                          ? 'bg-slate-700 text-gray-200 hover:bg-slate-600'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {scale === 1 ? 'Default' : scale === 1.1 ? 'Large' : scale === 1.25 ? 'XL' : 'XXL'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* Account */}
           <section className={`${theme === 'dark' ? 'bg-slate-800 rounded-xl border border-slate-700 p-6' : 'bg-white rounded-xl border border-gray-200 p-6'}`}>
             <h2 className={`${theme === 'dark' ? 'text-lg font-bold text-gray-100 mb-4' : 'text-lg font-bold text-gray-800 mb-4'}`}>Account</h2>
 
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3 mb-6" noValidate>
-              <h3 className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300 uppercase tracking-wide' : 'text-xs font-semibold text-gray-700 uppercase tracking-wide'}`}>Change password</h3>
+              <h3 className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-300 uppercase tracking-wide' : 'text-xs font-semibold text-gray-700 tracking-wide'}`}>Change password</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <input
                   type="password"

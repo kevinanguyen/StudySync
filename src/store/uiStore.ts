@@ -17,7 +17,10 @@ interface UIState {
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 
-showToast: (input: { level: ToastLevel; message: string; duration?: number }) => string;
+  textScale: number;
+  setTextScale: (scale: number) => void;
+
+  showToast: (input: { level: ToastLevel; message: string; duration?: number }) => string;
   dismissToast: (id: string) => void;
 }
 
@@ -26,11 +29,13 @@ function makeId(): string {
 }
 
 export const useUIStore = create<UIState>((set) => ({
+  textScale: 1,
+  setTextScale: (scale: number) => set({ textScale: scale }),
+
   toasts: [],
 
   theme: 'light',
   setTheme: (theme) => {
-    // Persist and apply to document
     if (typeof document !== 'undefined') {
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
@@ -43,6 +48,7 @@ export const useUIStore = create<UIState>((set) => ({
     if (typeof window !== 'undefined') localStorage.setItem('theme', theme);
     set({ theme });
   },
+
   toggleTheme: () =>
     set((s) => {
       const next = s.theme === 'light' ? 'dark' : 'light';
@@ -59,42 +65,38 @@ export const useUIStore = create<UIState>((set) => ({
       return { theme: next };
     }),
 
-    showToast: ({ level, message, duration = 3000 }) => {
-      const id = makeId();
+  showToast: ({ level, message, duration = 3000 }) => {
+    const id = makeId();
 
+    set((s) => ({
+      toasts: [...s.toasts, { id, level, message }],
+    }));
+
+    setTimeout(() => {
       set((s) => ({
-        toasts: [...s.toasts, { id, level, message }],
+        toasts: s.toasts.filter((t) => t.id !== id),
       }));
+    }, duration);
 
-      setTimeout(() => {
-        set((s) => ({
-          toasts: s.toasts.filter((t) => t.id !== id),
-        }));
-      }, duration);
-
-      return id;
-    },
+    return id;
+  },
 
   dismissToast: (id) => {
     set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
   },
 }));
 
-/**
- * Initialize theme from persisted preference or system preference.
- * Call once on app mount.
- */
 export function initTheme() {
   const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
   let t: Theme = 'light';
+
   if (stored === 'light' || stored === 'dark') {
     t = stored as Theme;
   } else {
-    const prefersDark =
-      typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     t = prefersDark ? 'dark' : 'light';
   }
-  // Apply DOM + persist
+
   if (typeof document !== 'undefined') {
     if (t === 'dark') {
       document.documentElement.classList.add('dark');
@@ -104,6 +106,7 @@ export function initTheme() {
       document.body.classList.remove('dark');
     }
   }
+
   if (typeof window !== 'undefined') localStorage.setItem('theme', t);
   useUIStore.setState({ theme: t });
 }

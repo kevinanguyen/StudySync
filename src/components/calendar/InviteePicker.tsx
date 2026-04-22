@@ -7,6 +7,8 @@ import { useUIStore } from '@/store/uiStore';
 import type { EventRow, ExpandedClassMeeting } from '@/types/domain';
 import type { Tables } from '@/types/db';
 import type { FriendshipWithProfile } from '@/services/friends.service';
+import { filterFriends } from '@/lib/search';
+
 
 interface InviteePickerProps {
   friends: FriendshipWithProfile[];
@@ -88,11 +90,7 @@ export default function InviteePicker({ friends, range, selected, onToggle }: In
   const availByUser: Record<string, FriendAvailability> = {};
   for (const a of availability) availByUser[a.user_id] = a;
 
-  const filteredFriends = friends.filter((f) => {
-    const q = query.toLowerCase().trim();
-    if (!q) return true;
-    return f.other.name.toLowerCase().includes(q) || f.other.username.toLowerCase().includes(q);
-  });
+const filteredFriends = filterFriends(friends, query);
 
   return (
     <div className="flex flex-col gap-2">

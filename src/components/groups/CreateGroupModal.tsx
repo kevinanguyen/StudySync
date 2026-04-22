@@ -5,6 +5,8 @@ import { useCourses } from '@/hooks/useCourses';
 import { useFriends } from '@/hooks/useFriends';
 import { useUIStore } from '@/store/uiStore';
 import type { Group, GroupInput } from '@/services/groups.service';
+import { filterFriends } from '@/lib/search';
+
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -60,13 +62,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
     }
   }
 
-const filteredFriends = accepted
-  .filter((f) => {
-    const q = query.toLowerCase().trim();
-    if (!q) return true;
-    return f.other.name.toLowerCase().includes(q) || f.other.username.toLowerCase().includes(q);
-  })
-  .slice(0, query ? undefined : 10);
+const filteredFriends = filterFriends(accepted, query);
 
   return (
     <Drawer

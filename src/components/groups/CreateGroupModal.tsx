@@ -22,6 +22,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
   const [description, setDescription] = useState('');
   const [courseId, setCourseId] = useState<string | ''>('');
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
@@ -29,8 +30,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
 
   useEffect(() => {
     if (open) {
-      setName(''); setDescription(''); setCourseId('');
-      setSelectedMembers(new Set()); setErr(null);
+      setName(''); setDescription(''); setCourseId(''); setSelectedMembers(new Set()); setQuery(''); setErr(null);
     }
   }, [open]);
 
@@ -47,10 +47,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
     setErr(null);
     setSubmitting(true);
     try {
-      const group = await onCreate(
-        { name: name.trim(), description: description.trim() || null, course_id: courseId || null },
-        Array.from(selectedMembers)
-      );
+      const group = await onCreate({ name: name.trim(), description: description.trim() || null, course_id: courseId || null }, Array.from(selectedMembers));
       showToast({ level: 'success', message: `Group "${group.name}" created` });
       onCreated?.(group);
       onClose();
@@ -63,6 +60,14 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
     }
   }
 
+const filteredFriends = accepted
+  .filter((f) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return true;
+    return f.other.name.toLowerCase().includes(q) || f.other.username.toLowerCase().includes(q);
+  })
+  .slice(0, query ? undefined : 10);
+
   return (
     <Drawer
       open={open}
@@ -70,44 +75,20 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
       title="Create a group"
       footer={
         <div className="flex gap-2 justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors' : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors'}`}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="create-group-form"
-            disabled={submitting}
-            className="text-sm font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded-md transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {submitting ? 'Creating…' : 'Create group'}
-          </button>
+          <button type="button" onClick={onClose} className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100 px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors' : 'text-sm font-semibold text-gray-700 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors'}`}>Cancel</button>
+          <button type="submit" form="create-group-form" disabled={submitting} className="text-sm font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-1.5 rounded-md transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">{submitting ? 'Creating…' : 'Create group'}</button>
         </div>
       }
     >
       <form id="create-group-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1.5">
           <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Name <span className="text-red-500">*</span></span>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. HCI Study Group"
-            autoFocus
-            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
-          />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. HCI Study Group" autoFocus className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`} />
         </label>
 
         <label className="flex flex-col gap-1.5">
           <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Course (optional)</span>
-          <select
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
-          >
+          <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}>
             <option value="">— No course —</option>
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
@@ -117,12 +98,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
 
         <label className="flex flex-col gap-1.5">
           <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Description (optional)</span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y`}
-          />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB] resize-y`} />
         </label>
 
         <div className="flex flex-col gap-1.5">
@@ -130,40 +106,41 @@ export default function CreateGroupModal({ open, onClose, onCreate, onCreated }:
           {accepted.length === 0 ? (
             <p className={`${theme === 'dark' ? 'text-xs text-gray-100' : 'text-xs text-gray-500'}`}>You have no friends yet. You'll be the only member.</p>
           ) : (
-            <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700 bg-slate-900' : 'border border-gray-100 bg-white'}`}>
-              {accepted.map((f) => {
-                const checked = selectedMembers.has(f.other.id);
-                return (
-                  <li key={f.other.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggleMember(f.other.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
-                        theme === 'dark'
-                          ? checked
-                            ? 'bg-blue-500/15 hover:bg-blue-500/20'
-                            : 'hover:bg-slate-800'
-                          : checked
-                            ? 'bg-blue-50'
-                            : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
-                      <span className={`flex-1 text-left text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</span>
-                      <input type="checkbox" checked={checked} onChange={() => {}} className="pointer-events-none" />
+            <div className="flex flex-col gap-2">
+              {selectedMembers.size > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {accepted.filter((f) => selectedMembers.has(f.other.id)).map((f) => (
+                    <button key={f.other.id} type="button" onClick={() => toggleMember(f.other.id)} className={`${theme === 'dark' ? 'bg-slate-800 text-gray-200' : 'bg-gray-100 text-gray-700'} text-xs px-2 py-1 rounded-full`}>
+                      {f.other.name} ×
                     </button>
-                  </li>
-                );
-              })}
-            </ul>
+                  ))}
+                </div>
+              )}
+
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search friends to invite…" className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`} />
+
+              <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 ${theme === 'dark' ? 'border border-slate-700 bg-slate-900' : 'border border-gray-100 bg-white'}`}>
+                {filteredFriends.map((f) => {
+                  const checked = selectedMembers.has(f.other.id);
+                  return (
+                    <li key={f.other.id}>
+                      <button type="button" onClick={() => toggleMember(f.other.id)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${theme === 'dark' ? checked ? 'bg-blue-500/15 hover:bg-blue-500/20' : 'hover:bg-slate-800' : checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                        <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
+                        <div className="flex-1 text-left min-w-0">
+                          <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</p>
+                          <p className={`text-[10px] truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{f.other.username}</p>
+                        </div>
+                        <input type="checkbox" checked={checked} onChange={() => {}} className="pointer-events-none" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </div>
 
-        {err && (
-          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">
-            {err}
-          </div>
-        )}
+        {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">{err}</div>}
       </form>
     </Drawer>
   );

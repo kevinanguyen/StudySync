@@ -13,6 +13,10 @@ type Theme = 'light' | 'dark';
 interface UIState {
   toasts: Toast[];
 
+  welcomeOpen: boolean;
+  openWelcome: () => void;
+  closeWelcome: () => void;
+
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -33,6 +37,9 @@ export const useUIStore = create<UIState>((set) => ({
   setTextScale: (scale: number) => set({ textScale: scale }),
 
   toasts: [],
+  welcomeOpen: false,
+  openWelcome: () => set({ welcomeOpen: true }),
+  closeWelcome: () => set({ welcomeOpen: false }),
 
   theme: 'light',
   setTheme: (theme) => {

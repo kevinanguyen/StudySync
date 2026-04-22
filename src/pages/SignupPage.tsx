@@ -46,6 +46,9 @@ export default function SignupPage() {
         major: major.trim() || undefined,
         gradYear: gradYear ? Number(gradYear) : undefined,
       });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('studysync.showWelcome', 'true');
+      }
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Signup failed.');

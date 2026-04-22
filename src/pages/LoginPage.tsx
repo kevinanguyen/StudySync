@@ -2,6 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { signIn } from '@/services/auth.service';
+import { useUIStore } from '@/store/uiStore';
+
+const theme = useUIStore((s) => s.theme);
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -48,7 +51,7 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">School email</span>
+          <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>School email</span>
           <input
             type="email"
             value={email}
@@ -60,7 +63,7 @@ export default function LoginPage() {
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Password</span>
+          <span className={`${theme === 'dark' ? 'text-xs font-semibold uppercase text-gray-300' : 'text-xs font-semibold uppercase text-gray-700'}`}>Password</span>
           <input
             type="password"
             value={password}

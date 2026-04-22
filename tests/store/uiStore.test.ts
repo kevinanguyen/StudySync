@@ -3,7 +3,7 @@ import { useUIStore } from '@/store/uiStore';
 
 describe('uiStore toasts', () => {
   beforeEach(() => {
-    useUIStore.setState({ toasts: [] });
+    useUIStore.setState({ toasts: [], welcomeOpen: false });
   });
 
   it('starts with an empty toast queue', () => {
@@ -30,5 +30,13 @@ describe('uiStore toasts', () => {
     useUIStore.getState().showToast({ level: 'info', message: 'A' });
     useUIStore.getState().dismissToast('does-not-exist');
     expect(useUIStore.getState().toasts).toHaveLength(1);
+  });
+
+  it('opens and closes the welcome guide', () => {
+    useUIStore.getState().openWelcome();
+    expect(useUIStore.getState().welcomeOpen).toBe(true);
+
+    useUIStore.getState().closeWelcome();
+    expect(useUIStore.getState().welcomeOpen).toBe(false);
   });
 });

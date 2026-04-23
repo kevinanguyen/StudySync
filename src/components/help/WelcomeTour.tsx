@@ -17,13 +17,18 @@ const helpSections = [
         text: 'The icons in the top-right corner provide quick access to key features:',
         iconItems: [
           { icon: 'calendar', label: 'Calendar', text: 'Return to the main dashboard' },
-          { icon: 'availability', label: 'Availability', text: 'Update your current status' },
           { icon: 'night', label: 'Night Mode', text: 'Toggle between light and dark themes' },
           { icon: 'help', label: 'Help', text: 'Open this guide' },
           { icon: 'settings', label: 'Settings', text: 'Manage your account' },
           { icon: 'logout', label: 'Log Out', text: 'Sign out when finished' },
         ],
         preview: 'settings',
+      },
+      {
+        title: 'Profile Bar',
+        text: 'You may click the profile bar to quickly change your availability status and edit your profile information.',
+        highlights: ['Open the profile menu from the sidebar', 'Choose a new availability status in one click', 'Use Edit Profile to jump straight to Settings'],
+        preview: 'dashboard',
       },
     ],
   },
@@ -98,9 +103,9 @@ const pages = helpSections.flatMap((section, sectionIndex) =>
 type Preview = (typeof pages)[number]['preview'];
 type PageTitle = (typeof pages)[number]['title'];
 
-type NavIcon = 'calendar' | 'availability' | 'night' | 'help' | 'settings' | 'logout';
+type NavIcon = 'calendar' | 'night' | 'help' | 'settings' | 'logout';
 
-function HelpIcon({ icon }: { icon: NavIcon }) {
+function HelpIcon({ icon, dark = false }: { icon: NavIcon; dark?: boolean }) {
   if (icon === 'calendar') {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -108,11 +113,20 @@ function HelpIcon({ icon }: { icon: NavIcon }) {
       </svg>
     );
   }
-  if (icon === 'availability') {
-    return <span className="h-3 w-3 rounded-full bg-emerald-500" aria-hidden="true" />;
-  }
   if (icon === 'night') {
-    return <span className="text-sm" aria-hidden="true">🌙</span>;
+    if (dark) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <circle cx="12" cy="12" r="4" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" />
+        </svg>
+      );
+    }
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+      </svg>
+    );
   }
   if (icon === 'help') {
     return <span className="text-sm font-bold" aria-hidden="true">?</span>;
@@ -144,9 +158,9 @@ function PreviewScreen({ type, title, dark }: { type: Preview; title: PageTitle;
         <div className="flex items-center justify-between mb-3">
           <div className="h-3 w-24 rounded-full bg-[#3B5BDB]" />
           <div className="flex gap-2">
-            {['calendar', 'availability', 'night', 'help', 'settings', 'logout'].map((icon) => (
+            {['calendar', 'night', 'help', 'settings', 'logout'].map((icon) => (
               <div key={icon} className="h-8 w-8 rounded-md bg-[#3B5BDB] text-white flex items-center justify-center ring-2 ring-[#3B5BDB]/20">
-                <HelpIcon icon={icon as NavIcon} />
+                <HelpIcon icon={icon as NavIcon} dark={dark} />
               </div>
             ))}
           </div>
@@ -304,6 +318,44 @@ function PreviewScreen({ type, title, dark }: { type: Preview; title: PageTitle;
     );
   }
 
+  if (title === 'Profile Bar') {
+    return (
+      <div className={`rounded-lg border p-3 shadow-sm ${shell}`} aria-hidden="true">
+        <div className="grid grid-cols-[88px_1fr] gap-3 h-40">
+          <div className={`rounded-md p-2 ${subtle} flex flex-col justify-end`}>
+            <div className={`rounded-xl border px-3 py-3 ${dark ? 'border-slate-600 bg-slate-800' : 'border-gray-200 bg-white'} ring-2 ring-[#3B5BDB]/50`}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[#3B5BDB]" />
+                <div className="flex-1">
+                  <div className={`h-2 w-16 rounded-full mb-2 ${line}`} />
+                  <div className={`h-2 w-12 rounded-full ${line}`} />
+                </div>
+                <div className="h-7 w-7 rounded-md bg-amber-500" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-end">
+            <div className={`w-full max-w-[210px] rounded-xl border p-3 shadow-sm ${dark ? 'border-slate-700 bg-slate-900' : 'border-gray-200 bg-white'}`}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-10 w-10 rounded-full bg-[#3B5BDB]" />
+                <div className="flex-1">
+                  <div className={`h-2 w-20 rounded-full mb-2 ${line}`} />
+                  <div className={`h-2 w-14 rounded-full ${line}`} />
+                </div>
+              </div>
+              <div className="space-y-2 mb-3">
+                <div className="h-8 rounded-md bg-emerald-500/85" />
+                <div className={`h-8 rounded-md ${line}`} />
+                <div className={`h-8 rounded-md ${line}`} />
+              </div>
+              <div className="h-8 rounded-md bg-[#3B5BDB]" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`rounded-lg border p-3 shadow-sm ${shell}`} aria-hidden="true">
       <div className="h-3 w-24 rounded-full bg-[#3B5BDB] mb-3" />
@@ -447,8 +499,8 @@ export default function WelcomeTour() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_1.05fr] gap-5 p-5 md:min-h-[540px]">
-          <nav className={`rounded-lg border p-2 overflow-y-auto md:h-[440px] ${dark ? 'border-slate-700 bg-slate-950' : 'border-gray-200 bg-gray-50'}`} aria-label="Help pages">
+        <div className="grid grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)_minmax(320px,1.05fr)] gap-5 p-5 md:items-stretch">
+          <nav className={`rounded-lg border p-2 overflow-y-auto md:min-h-[380px] md:max-h-[520px] ${dark ? 'border-slate-700 bg-slate-950' : 'border-gray-200 bg-gray-50'}`} aria-label="Help pages">
             {helpSections.map((section, sectionIndex) => (
               <div key={section.title} className="mb-2 last:mb-0">
                 <button
@@ -469,7 +521,7 @@ export default function WelcomeTour() {
             ))}
           </nav>
 
-          <div className="flex flex-col md:h-[440px]">
+          <div className="flex flex-col md:min-h-[380px]">
             <p className={`text-xs font-semibold uppercase mb-1 ${dark ? 'text-blue-300' : 'text-[#3B5BDB]'}`}>{section.title}</p>
             <h3 className="text-2xl font-bold mb-2">{page.title}</h3>
             {'text' in page && page.text && (
@@ -478,12 +530,29 @@ export default function WelcomeTour() {
             {'iconItems' in page ? (
               <ul className="space-y-2 mb-5">
                 {page.iconItems.map((item) => (
-                  <li key={item.label} className="grid grid-cols-[28px_1fr] items-center gap-x-3 text-sm">
-                    <span className="h-7 w-7 rounded-md bg-[#3B5BDB] text-white flex items-center justify-center flex-shrink-0">
-                      <HelpIcon icon={item.icon} />
-                    </span>
+                  <li
+                    key={item.label}
+                    className={`grid items-center gap-x-3 text-sm ${
+                      item.icon === 'night' ? 'grid-cols-[28px_28px_1fr] gap-x-1.5' : 'grid-cols-[28px_1fr]'
+                    }`}
+                  >
+                    {item.icon === 'night' ? (
+                      <>
+                        <span className="h-7 w-7 rounded-md bg-[#3B5BDB] text-white flex items-center justify-center flex-shrink-0">
+                          <HelpIcon icon="night" dark />
+                        </span>
+                        <span className="h-7 w-7 rounded-md bg-[#3B5BDB] text-white flex items-center justify-center flex-shrink-0">
+                          <HelpIcon icon="night" dark={false} />
+                        </span>
+                      </>
+                    ) : (
+                      <span className="h-7 w-7 rounded-md bg-[#3B5BDB] text-white flex items-center justify-center flex-shrink-0">
+                        <HelpIcon icon={item.icon} dark={dark} />
+                      </span>
+                    )}
                     <span className={`leading-6 ${dark ? 'text-gray-200' : 'text-gray-700'}`}>
-                      <span className="font-bold">{item.label}</span> — {item.text}
+                      <span className="font-bold">{item.icon === 'night' ? 'Day/Night Mode' : item.label}</span>{' '}
+                      — {item.icon === 'night' ? 'Switch website theme' : item.text}
                     </span>
                   </li>
                 ))}
@@ -503,10 +572,8 @@ export default function WelcomeTour() {
                 type="button"
                 onClick={handleBack}
                 disabled={isFirstPage && isFirstSection}
-                className={`text-sm font-semibold px-3 py-2 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                  showPreviousSection && !isFirstSection
-                    ? 'text-white bg-[#3B5BDB] hover:bg-[#3451c7]'
-                    : `border ${dark ? 'border-slate-700 text-gray-200 hover:bg-slate-800' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`
+                className={`text-sm font-semibold px-3 py-2 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed border ${
+                  dark ? 'border-slate-700 text-gray-200 hover:bg-slate-800' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {showPreviousSection ? 'Previous section' : 'Back'}
@@ -522,7 +589,7 @@ export default function WelcomeTour() {
             </div>
           </div>
 
-          <div className={`rounded-xl p-4 md:h-[440px] ${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
+          <div className={`rounded-xl p-4 md:min-h-[380px] ${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
             <PreviewScreen type={page.preview} title={page.title} dark={dark} />
           </div>
         </div>

@@ -11,6 +11,23 @@ interface HeaderIconButtonProps {
   children: ReactNode;
 }
 
+function ThemeModeIcon({ nextTheme }: { nextTheme: 'light' | 'dark' }) {
+  if (nextTheme === 'light') {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <circle cx="12" cy="12" r="4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+    </svg>
+  );
+}
+
 function HeaderIconButton({ label, onClick, children }: HeaderIconButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const suppressTooltipRef = useRef(false);
@@ -63,6 +80,8 @@ export default function Header() {
   const theme = useUIStore((s) => s.theme);
   const openWelcome = useUIStore((s) => s.openWelcome);
   const resetAuth = useAuthStore((s) => s.reset);
+  const nextTheme = theme === 'light' ? 'dark' : 'light';
+  const themeToggleLabel = nextTheme === 'dark' ? 'Night mode' : 'Day mode';
 
   // theme is read from the UI store; no debug logging in production
 
@@ -103,16 +122,10 @@ export default function Header() {
 
         {/* 🌙 Dark mode toggle */}
         <HeaderIconButton
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          label="Night mode"
+          onClick={() => setTheme(nextTheme)}
+          label={themeToggleLabel}
         >
-          {theme === 'dark' ? (
-            // ☀️ Sun icon
-            <span className="text-sm">☀️</span>
-          ) : (
-            // 🌙 Moon icon
-            <span className="text-sm">🌙</span>
-          )}
+          <ThemeModeIcon nextTheme={nextTheme} />
         </HeaderIconButton>
 
         <HeaderIconButton

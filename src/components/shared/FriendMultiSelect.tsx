@@ -10,20 +10,24 @@ interface FriendMultiSelectProps {
   emptyMessage?: string;
   searchPlaceholder?: string;
   maxDefaultResults?: number;
+  hideUntilQuery?: boolean;
   renderExtra?: (friend: FriendshipWithProfile) => React.ReactNode;
 }
 
-export default function FriendMultiSelect({ friends, selected, onToggle, emptyMessage = "Add friends first to invite them.", searchPlaceholder = "Search friends to invite…", maxDefaultResults = 10, renderExtra }: FriendMultiSelectProps) {
+export default function FriendMultiSelect({ friends, selected, onToggle, emptyMessage = "Add friends first to invite them.", searchPlaceholder = "Search friends to invite…", maxDefaultResults = 10, hideUntilQuery = false, renderExtra }: FriendMultiSelectProps) {
   const [query, setQuery] = useState('');
   const theme = useUIStore((s) => s.theme);
 
   if (friends.length === 0) return <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{emptyMessage}</p>;
 
+  const trimmedQuery = query.toLowerCase().trim();
+
   const filteredFriends = friends.filter((f) => {
-    const q = query.toLowerCase().trim();
-    if (!q) return true;
-    return f.other.name.toLowerCase().includes(q) || f.other.username.toLowerCase().includes(q);
-  }).slice(0, query ? undefined : maxDefaultResults);
+    if (!trimmedQuery) return true;
+    return f.other.name.toLowerCase().includes(trimmedQuery) || f.other.username.toLowerCase().includes(trimmedQuery);
+  }).slice(0, trimmedQuery ? undefined : maxDefaultResults);
+
+  const visibleFriends = hideUntilQuery && !trimmedQuery ? [] : filteredFriends;
 
   return (
     <div className="flex flex-col gap-2">
@@ -41,7 +45,13 @@ export default function FriendMultiSelect({ friends, selected, onToggle, emptyMe
       <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`} />
 
       <ul className={`flex flex-col gap-1 max-h-64 overflow-y-auto rounded-md p-1 border ${theme === 'dark' ? 'border-slate-700 bg-slate-900' : 'border-gray-100 bg-white'}`}>
-        {filteredFriends.map((f) => {
+        {hideUntilQuery && !trimmedQuery && (
+          <li className={`px-2 py-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Start typing to search friends.</li>
+        )}
+        {trimmedQuery && visibleFriends.length === 0 && (
+          <li className={`px-2 py-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No matching friends.</li>
+        )}
+        {visibleFriends.map((f) => {
           const checked = selected.has(f.other.id);
           return (
             <li key={f.other.id}>

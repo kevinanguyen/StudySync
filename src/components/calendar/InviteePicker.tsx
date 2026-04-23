@@ -65,6 +65,7 @@ export default function InviteePicker({ friends, range, selected, onToggle }: In
       friends={friends}
       selected={selected}
       onToggle={onToggle}
+      hideUntilQuery
       renderExtra={(f) => {
         const avail = availByUser[f.other.id];
         const hasConflict = avail && !avail.available;

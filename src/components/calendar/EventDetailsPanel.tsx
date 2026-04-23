@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import Avatar from '@/components/shared/Avatar';
-import { listParticipants, respondToInvite, type ParticipantWithProfile } from '@/services/events.service';
+import InviteePicker from './InviteePicker';
+import { useFriends } from '@/hooks/useFriends';
+import { inviteParticipant, listParticipants, removeParticipant, respondToInvite, type ParticipantWithProfile } from '@/services/events.service';
 import type { EventRow, EnrolledCourse, EventVisibility } from '@/types/domain';
 import type { EventInput } from '@/services/events.service';
 import { useUIStore } from '@/store/uiStore';
@@ -31,6 +33,7 @@ function combineDateTime(dateStr: string, timeStr: string): Date {
 }
 
 export default function EventDetailsPanel({ event, courses, currentUserId, onClose, onUpdate, onDelete }: EventDetailsPanelProps) {
+  const { accepted: friends } = useFriends();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -47,6 +50,7 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
+  const [inviteeIds, setInviteeIds] = useState<Set<string>>(new Set());
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
   const theme = useUIStore((s) => s.theme);
@@ -65,8 +69,14 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
       setErr(null);
       setParticipantsLoading(true);
       listParticipants(event.id)
-        .then(setParticipants)
-        .catch(() => setParticipants([]))
+        .then((loaded) => {
+          setParticipants(loaded);
+          setInviteeIds(new Set(loaded.map((p) => p.participant.user_id)));
+        })
+        .catch(() => {
+          setParticipants([]);
+          setInviteeIds(new Set());
+        })
         .finally(() => setParticipantsLoading(false));
     }
   }, [event]);
@@ -75,6 +85,9 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
 
   const isOwner = event.owner_id === currentUserId;
   const course = event.course_id ? courses.find((c) => c.id === event.course_id) : null;
+  const editRange = date && startTime && endTime
+    ? { start: combineDateTime(date, startTime), end: combineDateTime(date, endTime) }
+    : null;
 
   async function handleRespond(response: 'accepted' | 'declined' | 'maybe') {
     if (!event || !currentUserId) return;
@@ -96,10 +109,12 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
   async function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr(null);
+    if (!event) { setErr('No event selected.'); return; }
     if (!title.trim()) { setErr('Title is required.'); return; }
     const start = combineDateTime(date, startTime);
     const end = combineDateTime(date, endTime);
     if (end <= start) { setErr('End must be after start.'); return; }
+    const eventId = event.id;
     setSubmitting(true);
     try {
       await onUpdate({
@@ -111,7 +126,27 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
         description: description.trim() || null,
         visibility,
       });
-      showToast({ level: 'success', message: 'Event updated' });
+      const previousInviteeIds = new Set(participants.map((p) => p.participant.user_id));
+      const toInvite = Array.from(inviteeIds).filter((id) => !previousInviteeIds.has(id));
+      const toRemove = Array.from(previousInviteeIds).filter((id) => !inviteeIds.has(id));
+
+      for (const userId of toInvite) {
+        await inviteParticipant(eventId, userId);
+      }
+      for (const userId of toRemove) {
+        await removeParticipant(eventId, userId);
+      }
+
+      if (toInvite.length > 0 || toRemove.length > 0) {
+        const updatedParticipants = await listParticipants(eventId);
+        setParticipants(updatedParticipants);
+        setInviteeIds(new Set(updatedParticipants.map((p) => p.participant.user_id)));
+      }
+
+      const inviteSummary = toInvite.length || toRemove.length
+        ? ` · ${toInvite.length} added, ${toRemove.length} removed`
+        : '';
+      showToast({ level: 'success', message: `Event updated${inviteSummary}` });
       setEditing(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to update.';
@@ -338,6 +373,23 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
                 }`}
               />
             </label>
+
+            <div className="flex flex-col gap-1.5">
+              <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Invite friends (optional)</span>
+              <InviteePicker
+                friends={friends}
+                range={editRange}
+                selected={inviteeIds}
+                onToggle={(id) => {
+                  setInviteeIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    return next;
+                  });
+                }}
+              />
+            </div>
 
             <fieldset className="flex flex-col gap-1.5">
               <legend className={`text-xs font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-700'}`}>Visibility</legend>

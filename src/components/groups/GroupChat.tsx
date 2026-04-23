@@ -90,7 +90,7 @@ export default function GroupChat({ groupId }: GroupChatProps) {
           const mine = m.author_id === currentUserId;
           return (
             <div key={m.id} className="flex items-start gap-2">
-              <Avatar user={{ avatarColor: author?.avatar_color, initials: author?.initials ?? '?' }} size="sm" />
+              <Avatar user={{ avatarColor: author?.avatar_color, avatarUrl: author?.avatar_url, initials: author?.initials ?? '?' }} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <span

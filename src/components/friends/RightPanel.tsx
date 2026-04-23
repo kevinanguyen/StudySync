@@ -136,7 +136,7 @@ export default function RightPanel() {
                     className={`flex items-center gap-2 px-1.5 py-1.5 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 rounded-md ${theme === 'dark' ? 'text-gray-100' : ''}`}
                   >
                     <div className="relative flex-shrink-0">
-                      <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
+                      <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials }} size="sm" />
                       <span
                         className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white"
                         style={{ backgroundColor: cfg.color }}

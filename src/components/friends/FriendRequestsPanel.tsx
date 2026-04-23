@@ -52,7 +52,7 @@ export default function FriendRequestsPanel({ open, onClose }: FriendRequestsPan
           <ul className="flex flex-col gap-2">
             {incoming.map((f) => (
               <li key={f.other.id} className={`flex items-center gap-3 rounded-md px-3 py-2 ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-gray-50 border border-gray-100'}`}>
-                <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials, status: f.other.status }} size="md" />
+                <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials, status: f.other.status }} size="md" />
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</p>
                   <p className={`text-[11px] truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{f.other.username}</p>
@@ -86,7 +86,7 @@ export default function FriendRequestsPanel({ open, onClose }: FriendRequestsPan
           <ul className="flex flex-col gap-2">
             {outgoing.map((f) => (
               <li key={f.other.id} className={`flex items-center gap-3 rounded-md px-3 py-2 ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-gray-50 border border-gray-100'}`}>
-                <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials, status: f.other.status }} size="md" />
+                <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials, status: f.other.status }} size="md" />
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</p>
                   <p className={`text-[11px] truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{f.other.username}</p>

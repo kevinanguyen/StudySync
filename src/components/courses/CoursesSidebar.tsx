@@ -184,7 +184,7 @@ export default function CoursesSidebar() {
             >
               {profile && (
                 <Avatar
-                  user={{ avatarColor: profile.avatar_color, initials: profile.initials, status: profile.status }}
+                  user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
                   size="md"
                   showStatus
                 />
@@ -223,7 +223,7 @@ export default function CoursesSidebar() {
             >
               <div className="flex items-center gap-3 mb-3">
                 <Avatar
-                  user={{ avatarColor: profile.avatar_color, initials: profile.initials, status: profile.status }}
+                  user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
                   size="lg"
                   showStatus
                 />

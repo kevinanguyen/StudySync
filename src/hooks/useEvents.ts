@@ -25,7 +25,7 @@ interface UseEventsResult {
 function getCurrentUserAsOwnerInfo(): EventOwnerInfo | null {
   const p = useAuthStore.getState().profile;
   if (!p) return null;
-  return { id: p.id, name: p.name, initials: p.initials, avatar_color: p.avatar_color };
+  return { id: p.id, name: p.name, initials: p.initials, avatar_color: p.avatar_color, avatar_url: p.avatar_url };
 }
 
 export function useEvents(weekStart: Date, weekEnd: Date): UseEventsResult {

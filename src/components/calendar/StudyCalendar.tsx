@@ -13,6 +13,7 @@ import CreateEventDrawer from './CreateEventDrawer';
 import EventDetailsPanel from './EventDetailsPanel';
 import type { EventRow, EventOwnerInfo } from '@/types/domain';
 import { useUIStore } from '@/store/uiStore';
+import Avatar from '@/components/shared/Avatar';
 
 /** Look up the user's personal color for a course. Falls back to a neutral grey for uncategorized events. */
 function getCourseColor(courseId: string | null, courses: { id: string; color: string }[]): string {
@@ -31,10 +32,8 @@ function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
         <span
           title={`Created by ${ownerProfile.name}`}
           aria-label={`Created by ${ownerProfile.name}`}
-          className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[0.55rem] font-bold text-white ring-1 ring-white/70"
-          style={{ backgroundColor: ownerProfile.avatar_color }}
         >
-          {ownerProfile.initials}
+          <Avatar user={{ avatarColor: ownerProfile.avatar_color, avatarUrl: ownerProfile.avatar_url, initials: ownerProfile.initials }} size="sm" className="scale-[0.57] origin-top-left ring-1 ring-white/70 rounded-full" />
         </span>
       )}
       <div className="flex-1 min-w-0 flex flex-col">

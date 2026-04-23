@@ -56,7 +56,7 @@ export default function FriendMultiSelect({ friends, selected, onToggle, emptyMe
           return (
             <li key={f.other.id}>
               <button type="button" onClick={() => onToggle(f.other.id)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${theme === 'dark' ? checked ? 'bg-blue-500/15 hover:bg-blue-500/20' : 'hover:bg-slate-800' : checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                <Avatar user={{ avatarColor: f.other.avatar_color, initials: f.other.initials }} size="sm" />
+                <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials }} size="sm" />
                 <div className="flex-1 text-left min-w-0">
                   <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{f.other.name}</p>
                   <p className={`text-[10px] truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{f.other.username}</p>

@@ -1,10 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
-import Avatar from '@/components/shared/Avatar';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
-import { updateProfile, updateStatus, changePassword } from '@/services/profile.service';
+import AvatarImageEditor from '@/components/settings/AvatarImageEditor';
+import { updateProfile, updateStatus, changePassword, uploadProfileAvatar } from '@/services/profile.service';
 import { signOut } from '@/services/auth.service';
 import { statusConfig } from '@/lib/status';
 import type { UserStatus } from '@/types/domain';
@@ -28,6 +28,8 @@ export default function SettingsPage() {
   const [major, setMajor] = useState('');
   const [gradYear, setGradYear] = useState('');
   const [avatarColor, setAvatarColor] = useState(AVATAR_PALETTE[0]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [profileErr, setProfileErr] = useState<string | null>(null);
 
@@ -50,6 +52,8 @@ export default function SettingsPage() {
     setMajor(profile.major ?? '');
     setGradYear(profile.grad_year ? String(profile.grad_year) : '');
     setAvatarColor(profile.avatar_color);
+    setAvatarUrl(profile.avatar_url);
+    setAvatarBlob(null);
     setStatus(profile.status);
     setStatusText(profile.status_text ?? '');
   }, [profile]);
@@ -66,19 +70,24 @@ export default function SettingsPage() {
   async function handleProfileSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setProfileErr(null);
+    if (!profile) { setProfileErr('Profile not loaded.'); return; }
     if (!name.trim()) { setProfileErr('Name is required.'); return; }
     if (!username.trim()) { setProfileErr('Username is required.'); return; }
     if (gradYear && !/^\d{4}$/.test(gradYear)) { setProfileErr('Grad year must be 4 digits.'); return; }
     setProfileSubmitting(true);
     try {
-      const updated = await updateProfile(profile!.id, {
+      const nextAvatarUrl = avatarBlob ? await uploadProfileAvatar(profile.id, avatarBlob) : profile.avatar_url;
+      const updated = await updateProfile(profile.id, {
         name,
         username,
         major: major.trim() || null,
         grad_year: gradYear ? Number(gradYear) : null,
         avatar_color: avatarColor,
+        avatar_url: nextAvatarUrl,
       });
       setProfileInStore(updated);
+      setAvatarUrl(updated.avatar_url);
+      setAvatarBlob(null);
       showToast({ level: 'success', message: 'Profile updated' });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to update profile.';
@@ -150,12 +159,21 @@ export default function SettingsPage() {
             <h2 className={`${theme === 'dark' ? 'text-lg font-bold text-gray-100 mb-4' : 'text-lg font-bold text-gray-800 mb-4'}`}>Profile</h2>
             <form onSubmit={handleProfileSubmit} className="flex flex-col gap-4" noValidate>
               <div className="flex items-center gap-4">
-                <Avatar user={{ avatarColor, initials: profile.initials, status }} size="lg" showStatus />
                 <div>
                   <p className={`${theme === 'dark' ? 'text-sm font-semibold text-gray-100' : 'text-sm font-semibold text-gray-800'}`}>{profile.school_email}</p>
                   <p className={`${theme === 'dark' ? 'text-xs text-gray-300' : 'text-xs text-gray-500'}`}>(email is read-only)</p>
                 </div>
               </div>
+
+              <AvatarImageEditor
+                avatarColor={avatarColor}
+                avatarUrl={avatarUrl}
+                initials={profile.initials}
+                onAvatarReady={({ blob, previewUrl }) => {
+                  setAvatarBlob(blob);
+                  if (previewUrl) setAvatarUrl(previewUrl);
+                }}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1.5">

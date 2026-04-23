@@ -41,7 +41,7 @@ export function validateEventInput(input: EventInput): string | null {
 export async function listEventsInRange(weekStart: Date, weekEnd: Date): Promise<EventWithOwner[]> {
   const { data, error } = await supabase
     .from('events')
-    .select('*, owner_profile:profiles!events_owner_id_fkey(id, name, initials, avatar_color)')
+    .select('*, owner_profile:profiles!events_owner_id_fkey(id, name, initials, avatar_color, avatar_url)')
     .gte('start_at', weekStart.toISOString())
     .lt('start_at', weekEnd.toISOString())
     .order('start_at', { ascending: true });

@@ -456,7 +456,7 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
               <ul className="flex flex-col gap-1">
                 {participants.map((p) => (
                   <li key={p.participant.user_id} className="flex items-center gap-2">
-                    <Avatar user={{ avatarColor: p.profile.avatar_color, initials: p.profile.initials }} size="sm" />
+                    <Avatar user={{ avatarColor: p.profile.avatar_color, avatarUrl: p.profile.avatar_url, initials: p.profile.initials }} size="sm" />
                     <span className={`text-sm flex-1 truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{p.profile.name}</span>
                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
                       p.participant.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :

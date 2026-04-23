@@ -33,7 +33,7 @@ export default function GroupMembersList({ groupId }: GroupMembersListProps) {
           <li key={m.member.user_id} className={`flex items-center gap-2 px-2 py-1.5 rounded transition-colors 
             ${ theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-50' }`} 
           >
-            <Avatar user={{ avatarColor: m.profile.avatar_color, initials: m.profile.initials, status: m.profile.status }} size="sm" showStatus />
+            <Avatar user={{ avatarColor: m.profile.avatar_color, avatarUrl: m.profile.avatar_url, initials: m.profile.initials, status: m.profile.status }} size="sm" showStatus />
             <div className="min-w-0 flex-1">
               <p className={`text-xs font-semibold truncate ${ theme === 'dark' ? 'text-gray-100' : 'text-gray-800' }`}>{m.profile.name}</p>
               <p className={`text-[10px] capitalize ${ theme === 'dark' ? 'text-gray-400' : 'text-gray-500' }`}>{m.member.role}</p>

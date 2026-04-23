@@ -3,6 +3,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { statusConfig } from '@/lib/status';
 import type { Profile } from '@/services/friends.service';
 import { useUIStore } from '@/store/uiStore';
+import Avatar from '@/components/shared/Avatar';
 
 interface FriendProfileModalProps {
   open: boolean;
@@ -45,12 +46,12 @@ export default function FriendProfileModal({ open, profile, onClose, onUnfriend 
         <div className="relative px-5 pb-5">
           {/* Large avatar overlapping the banner */}
           <div className="absolute -top-9 left-5">
-            <div
-              className={`w-[72px] h-[72px] rounded-full flex items-center justify-center font-bold text-white text-2xl shadow-md ring-4 ${  theme === 'dark' ? 'ring-slate-900' : 'ring-white'}`}
-              style={{ backgroundColor: profile.avatar_color }}
-            >
-              {profile.initials}
-            </div>
+            <Avatar
+              user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
+              className={theme === 'dark' ? 'ring-4 ring-slate-900 rounded-full shadow-md' : 'ring-4 ring-white rounded-full shadow-md'}
+              size="lg"
+              showStatus
+            />
           </div>
 
           <button

@@ -6,3 +6,5 @@ node_modules/
 
 # Ignore typescript cache
 *.tsbuildinfo
+
+.gitignore

@@ -93,10 +93,12 @@ export default function Header() {
 
       <div className="flex items-center gap-2">
         <HeaderIconButton
-          onClick={openWelcome}
-          label="Help"
+          onClick={() => navigate('/dashboard')}
+          label="Dashboard"
         >
-          <span className="text-sm font-bold">?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" />
+          </svg>
         </HeaderIconButton>
 
         {/* 🌙 Dark mode toggle */}
@@ -111,6 +113,13 @@ export default function Header() {
             // 🌙 Moon icon
             <span className="text-sm">🌙</span>
           )}
+        </HeaderIconButton>
+
+        <HeaderIconButton
+          onClick={openWelcome}
+          label="Help"
+        >
+          <span className="text-sm font-bold">?</span>
         </HeaderIconButton>
 
         <HeaderIconButton

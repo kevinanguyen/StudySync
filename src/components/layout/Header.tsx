@@ -118,13 +118,13 @@ export default function Header() {
             </svg>
           )}
         </HeaderIconButton>
-        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M2 6C2 6 5 5 8 5C10 5 12 6 12 6V20C12 20 10 19 8 19C5 19 2 20 2 20V6Z" fill="white" fillOpacity="0.9"/>
-            <path d="M22 6C22 6 19 5 16 5C14 5 12 6 12 6V20C12 20 10 19 8 19C5 19 2 20 2 20V6Z" fill="white" fillOpacity="0.7"/>
-            <path d="M7 3C8.5 2 10.2 2 12 2C13.8 2 15.5 2 17 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </div>
+        {/* Brand mark — theme-switched monkey logo. Black bg of the image is
+            intentional sticker styling and matches the rounded badge below. */}
+        <img
+          src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
+          alt="StudySync"
+          className="w-8 h-8 rounded-lg flex-shrink-0 object-cover"
+        />
         <span className="text-lg font-bold tracking-tight">StudySync</span>
       </div>
 

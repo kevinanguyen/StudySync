@@ -132,6 +132,39 @@ export type Database = {
           },
         ]
       }
+      event_dismissals: {
+        Row: {
+          dismissed_at: string
+          event_id: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          event_id: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          event_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_dismissals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_dismissals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           event_id: string

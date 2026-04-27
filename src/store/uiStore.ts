@@ -99,9 +99,6 @@ export function initTheme() {
 
   if (stored === 'light' || stored === 'dark') {
     t = stored as Theme;
-  } else {
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    t = prefersDark ? 'dark' : 'light';
   }
 
   if (typeof document !== 'undefined') {

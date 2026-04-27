@@ -36,7 +36,8 @@ export function validateEventInput(input: EventInput): string | null {
  * List events visible to the current user within [weekStart, weekEnd).
  * RLS handles access control. Joins the owner's profile (minimal fields)
  * so shared events can render the creator's avatar without a separate
- * lookup per event.
+ * lookup per event. Filters out events the current user has dismissed
+ * (locally hidden) — the underlying event row is unchanged for everyone else.
  */
 export async function listEventsInRange(weekStart: Date, weekEnd: Date): Promise<EventWithOwner[]> {
   const { data, error } = await supabase
@@ -46,13 +47,52 @@ export async function listEventsInRange(weekStart: Date, weekEnd: Date): Promise
     .lt('start_at', weekEnd.toISOString())
     .order('start_at', { ascending: true });
   if (error) throw new EventsServiceError(error.message, error);
-  return (data ?? []).map((row) => {
-    // PostgREST returns the joined row as a single object (1:1). Strip it into our shape.
-    const { owner_profile, ...eventCols } = row as typeof row & {
-      owner_profile: EventOwnerInfo | null;
-    };
-    return { ...(eventCols as EventRow), owner_profile: owner_profile ?? null };
-  });
+
+  // Look up the current user's dismissals so we can filter them out.
+  const { data: sessionData } = await supabase.auth.getSession();
+  const currentUserId = sessionData.session?.user.id;
+
+  let dismissedIds: Set<string> = new Set();
+  if (currentUserId) {
+    const { data: dismissalsData } = await supabase
+      .from('event_dismissals')
+      .select('event_id')
+      .eq('user_id', currentUserId);
+    if (dismissalsData) {
+      dismissedIds = new Set(dismissalsData.map((d) => d.event_id));
+    }
+  }
+
+  return (data ?? [])
+    .filter((row) => !dismissedIds.has(row.id))
+    .map((row) => {
+      // PostgREST returns the joined row as a single object (1:1). Strip it into our shape.
+      const { owner_profile, ...eventCols } = row as typeof row & {
+        owner_profile: EventOwnerInfo | null;
+      };
+      return { ...(eventCols as EventRow), owner_profile: owner_profile ?? null };
+    });
+}
+
+/** Dismiss (locally hide) a shared event from the current user's calendar. */
+export async function dismissEvent(userId: string, eventId: string): Promise<void> {
+  const { error } = await supabase
+    .from('event_dismissals')
+    .insert({ user_id: userId, event_id: eventId });
+  // 23505 = unique violation (already dismissed) — treat as success.
+  if (error && (error as { code?: string }).code !== '23505') {
+    throw new EventsServiceError(error.message, error);
+  }
+}
+
+/** Un-dismiss an event (restore it to the calendar). */
+export async function undismissEvent(userId: string, eventId: string): Promise<void> {
+  const { error } = await supabase
+    .from('event_dismissals')
+    .delete()
+    .eq('user_id', userId)
+    .eq('event_id', eventId);
+  if (error) throw new EventsServiceError(error.message, error);
 }
 
 export async function createEvent(input: EventInput): Promise<EventRow> {

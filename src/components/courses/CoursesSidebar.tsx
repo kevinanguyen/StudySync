@@ -20,7 +20,7 @@ export default function CoursesSidebar() {
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);
   const reset = useAuthStore((s) => s.reset);
-  const { courses, loading, dropCourse, addCourse, updateCourse, addMeeting } = useCourses();
+  const { courses, loading, dropCourse, addCourse, updateCourse } = useCourses();
 
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EnrolledCourse | null>(null);
@@ -32,6 +32,7 @@ export default function CoursesSidebar() {
   const showToast = useUIStore((s) => s.showToast);
   const theme = useUIStore((s) => s.theme);
   const collapsed = useLayoutStore((s) => s.leftSidebarCollapsed);
+  const toggleLeftSidebar = useLayoutStore((s) => s.toggleLeftSidebar);
 
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -105,7 +106,6 @@ export default function CoursesSidebar() {
         onClose={() => setAddOpen(false)}
         existingCourses={courses}
         onAddCourse={addCourse}
-        onAddMeeting={addMeeting}
       />
       <EditCourseModal
         open={!!editTarget}
@@ -137,7 +137,22 @@ export default function CoursesSidebar() {
         className={`flex flex-col items-center ${theme === 'dark' ? 'bg-slate-900 border-r border-slate-700' : 'bg-white border-r border-gray-200'}`}
         style={{ width: '48px', minWidth: '48px' }}
       >
-        <div className="flex flex-col items-center gap-1.5 pt-3 pb-2 w-full flex-shrink-0">
+        <div className="flex flex-col items-center gap-1.5 pt-2 pb-2 w-full flex-shrink-0">
+          <button
+            type="button"
+            onClick={toggleLeftSidebar}
+            aria-label="Expand courses panel"
+            title="Expand courses panel"
+            className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+              theme === 'dark'
+                ? 'text-gray-300 hover:bg-slate-800'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
@@ -215,9 +230,27 @@ export default function CoursesSidebar() {
   return (
     <aside
       className={`flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-r border-slate-700' : 'bg-white border-r border-gray-200'}`}
-      style={{ width: '260px', minWidth: '260px' }}
+      style={{ width: '240px', minWidth: '240px' }}
     >
-      <div className="px-3 pt-4 pb-2 flex-shrink-0">
+      {/* Collapse toggle — top-right of the panel. */}
+      <div className="flex justify-end px-2 pt-2 flex-shrink-0">
+        <button
+          type="button"
+          onClick={toggleLeftSidebar}
+          aria-label="Collapse courses panel"
+          title="Collapse courses panel"
+          className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+            theme === 'dark'
+              ? 'text-gray-300 hover:bg-slate-800'
+              : 'text-gray-500 hover:bg-gray-100'
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+      <div className="px-3 pt-1 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <p className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>My Courses</p>
           <button

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { listEventsInRange, createEvent, updateEvent, deleteEvent } from '@/services/events.service';
+import { listEventsInRange, createEvent, updateEvent, deleteEvent, dismissEvent } from '@/services/events.service';
 import type { EventRow, EventWithOwner, EventOwnerInfo } from '@/types/domain';
 import type { EventInput } from '@/services/events.service';
 import { useAuthStore } from '@/store/authStore';
@@ -14,6 +14,8 @@ interface UseEventsResult {
   /** Optimistic local update — use for drag/resize. Returns a rollback function. */
   patchLocal: (id: string, patch: Partial<EventRow>) => () => void;
   deleteOne: (id: string) => Promise<void>;
+  /** Hide a shared event from this user's calendar without affecting the underlying row. */
+  dismiss: (id: string) => Promise<void>;
 }
 
 /**
@@ -116,5 +118,12 @@ export function useEvents(weekStart: Date, weekEnd: Date): UseEventsResult {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
-  return { events, loading, error, reload, createOne, updateOne, patchLocal, deleteOne };
+  const dismiss = useCallback(async (id: string) => {
+    const userId = useAuthStore.getState().session?.user.id;
+    if (!userId) throw new Error('Not authenticated');
+    await dismissEvent(userId, id);
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+
+  return { events, loading, error, reload, createOne, updateOne, patchLocal, deleteOne, dismiss };
 }

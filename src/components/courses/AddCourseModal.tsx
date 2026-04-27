@@ -1,9 +1,8 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import Drawer from '@/components/shared/Drawer';
-import ClassMeetingsField, { type ClassMeetingDraft } from './ClassMeetingsField';
 import { lookupCourseByCode } from '@/services/courses.service';
 import { useUIStore } from '@/store/uiStore';
-import type { EnrolledCourse, ClassMeeting, Course } from '@/types/domain';
+import type { EnrolledCourse, Course } from '@/types/domain';
 
 interface AddCourseModalProps {
   open: boolean;
@@ -12,18 +11,15 @@ interface AddCourseModalProps {
   existingCourses: EnrolledCourse[];
   /** Creates course-or-enrollment. Provided by parent that owns the useCourses instance. */
   onAddCourse: (input: { code: string; name: string; color: string; instructor: string | null }) => Promise<Course>;
-  /** Adds a class meeting for the newly-added course. */
-  onAddMeeting: (input: { course_id: string; day_of_week: number; start_time: string; end_time: string }) => Promise<ClassMeeting>;
 }
 
 const COLOR_PALETTE = ['#3B5BDB', '#EF4444', '#8B5CF6', '#F97316', '#10B981', '#14B8A6', '#EC4899', '#F59E0B'];
 
-export default function AddCourseModal({ open, onClose, existingCourses, onAddCourse, onAddMeeting }: AddCourseModalProps) {
+export default function AddCourseModal({ open, onClose, existingCourses, onAddCourse }: AddCourseModalProps) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [color, setColor] = useState(COLOR_PALETTE[0]);
   const [instructor, setInstructor] = useState('');
-  const [meetings, setMeetings] = useState<ClassMeetingDraft[]>([]);
   const [lookupResult, setLookupResult] = useState<'idle' | 'searching' | 'exists' | 'new'>('idle');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +33,6 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
       setName('');
       setColor(COLOR_PALETTE[0]);
       setInstructor('');
-      setMeetings([]);
       setLookupResult('idle');
       setErr(null);
     }
@@ -88,20 +83,12 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
 
     setSubmitting(true);
     try {
-      const course = await onAddCourse({
+      await onAddCourse({
         code: trimmedCode,
         name: trimmedName,
         color,
         instructor: instructor.trim() || null,
       });
-      for (const m of meetings) {
-        await onAddMeeting({
-          course_id: course.id,
-          day_of_week: m.day_of_week,
-          start_time: `${m.start_time}:00`,
-          end_time: `${m.end_time}:00`,
-        });
-      }
       showToast({ level: 'success', message: `Added ${trimmedCode}` });
       onClose();
     } catch (error) {
@@ -196,8 +183,6 @@ export default function AddCourseModal({ open, onClose, existingCourses, onAddCo
             className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
           />
         </label>
-
-        <ClassMeetingsField meetings={meetings} onChange={setMeetings} />
 
         {err && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">

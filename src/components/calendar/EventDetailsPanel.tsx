@@ -16,6 +16,8 @@ interface EventDetailsPanelProps {
   onClose: () => void;
   onUpdate: (patch: Partial<Omit<EventInput, 'owner_id'>>) => Promise<void>;
   onDelete: () => Promise<void>;
+  /** Optional: hide a shared event from the viewer's calendar (no effect on the owner). */
+  onDismiss?: () => Promise<void>;
 }
 
 function toDateInput(iso: string): string {
@@ -32,7 +34,7 @@ function combineDateTime(dateStr: string, timeStr: string): Date {
   return new Date(`${dateStr}T${timeStr}:00`);
 }
 
-export default function EventDetailsPanel({ event, courses, currentUserId, onClose, onUpdate, onDelete }: EventDetailsPanelProps) {
+export default function EventDetailsPanel({ event, courses, currentUserId, onClose, onUpdate, onDelete, onDismiss }: EventDetailsPanelProps) {
   const { accepted: friends } = useFriends();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -505,9 +507,33 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
             )}
 
             {!isOwner && (
-              <p className={`text-xs italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                You can only view this event — it's owned by someone else.
-              </p>
+              <div className="flex flex-col gap-2">
+                <p className={`text-xs italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  You can only view this event — it's owned by someone else.
+                </p>
+                {onDismiss && (
+                  <button
+                    type="button"
+                    title="Removes this event from your calendar only — the creator's event stays unchanged."
+                    onClick={async () => {
+                      try {
+                        await onDismiss();
+                        showToast({ level: 'info', message: 'Hidden from your calendar' });
+                      } catch (e) {
+                        const msg = e instanceof Error ? e.message : 'Failed to hide event';
+                        showToast({ level: 'error', message: msg });
+                      }
+                    }}
+                    className={`self-start text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+                      theme === 'dark'
+                        ? 'text-gray-100 border-slate-700 hover:bg-slate-700/50'
+                        : 'text-gray-600 hover:text-gray-900 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    Hide from my calendar
+                  </button>
+                )}
+              </div>
             )}
             {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2" role="alert">{err}</div>}
           </div>

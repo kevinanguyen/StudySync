@@ -32,6 +32,7 @@ export default function RightPanel() {
   const [profileTarget, setProfileTarget] = useState<Profile | null>(null);
   const theme = useUIStore((s) => s.theme);
   const collapsed = useLayoutStore((s) => s.rightSidebarCollapsed);
+  const toggleRightSidebar = useLayoutStore((s) => s.toggleRightSidebar);
 
   async function handleConfirmUnfriend() {
     if (!unfriendTarget) return;
@@ -89,8 +90,23 @@ export default function RightPanel() {
         className={`flex flex-col items-center ${theme === 'dark' ? 'bg-slate-900 border-l border-slate-700' : 'bg-white border-l border-gray-200'}`}
         style={{ width: '48px', minWidth: '48px' }}
       >
-        {/* Top action row: add friend + pending indicator */}
-        <div className="flex flex-col items-center gap-1.5 pt-3 pb-2 w-full flex-shrink-0">
+        {/* Top action row: expand toggle + add friend + pending indicator */}
+        <div className="flex flex-col items-center gap-1.5 pt-2 pb-2 w-full flex-shrink-0">
+          <button
+            type="button"
+            onClick={toggleRightSidebar}
+            aria-label="Expand friends panel"
+            title="Expand friends panel"
+            className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+              theme === 'dark'
+                ? 'text-gray-300 hover:bg-slate-800'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <button
             type="button"
             onClick={() => setAddFriendOpen(true)}
@@ -218,10 +234,28 @@ export default function RightPanel() {
   return (
     <aside
       className={`flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-l border-slate-700' : 'bg-white border-l border-gray-200'}`}
-      style={{ width: '210px', minWidth: '210px' }}
+      style={{ width: '240px', minWidth: '240px' }}
     >
+      {/* Collapse toggle — top-left of the panel (mirrored from CoursesSidebar). */}
+      <div className="flex justify-start px-2 pt-2 flex-shrink-0">
+        <button
+          type="button"
+          onClick={toggleRightSidebar}
+          aria-label="Collapse friends panel"
+          title="Collapse friends panel"
+          className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+            theme === 'dark'
+              ? 'text-gray-300 hover:bg-slate-800'
+              : 'text-gray-500 hover:bg-gray-100'
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
       {/* Search */}
-      <div className="px-3 pt-3 pb-2 flex-shrink-0">
+      <div className="px-3 pt-1 pb-2 flex-shrink-0">
   <div className={`${theme === 'dark' ? 'flex items-center gap-1.5 border border-slate-700 rounded px-2 py-1.5 bg-slate-800 focus-within:ring-1 focus-within:ring-blue-300' : 'flex items-center gap-1.5 border border-gray-200 rounded px-2 py-1.5 bg-gray-50 focus-within:ring-1 focus-within:ring-blue-300'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

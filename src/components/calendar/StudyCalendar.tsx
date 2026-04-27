@@ -61,7 +61,7 @@ export default function StudyCalendar() {
   const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate]);
   const weekEnd = useMemo(() => endOfWeek(anchorDate), [anchorDate]);
 
-  const { events, createOne, updateOne, patchLocal, deleteOne } = useEvents(weekStart, weekEnd);
+  const { events, createOne, updateOne, patchLocal, deleteOne, dismiss } = useEvents(weekStart, weekEnd);
   const { courses, classMeetings } = useCourses();
 
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
@@ -229,13 +229,22 @@ export default function StudyCalendar() {
           allDaySlot={false}
           slotMinTime="00:00:00"
           slotMaxTime="24:00:00"
-          slotDuration="00:30:00"
+          slotDuration="01:00:00"
+          snapDuration="00:30:00"
           slotLabelInterval="01:00:00"
           slotLabelFormat={{ hour: 'numeric', omitZeroMinute: false, meridiem: 'short' }}
           firstDay={1}
           nowIndicator
           selectable
           selectMirror
+          selectAllow={(info) => {
+            // Only allow same-day selections — prevents the smear-across-days bug.
+            const start = info.start;
+            const end = info.end;
+            return start.getFullYear() === end.getFullYear()
+              && start.getMonth() === end.getMonth()
+              && start.getDate() === end.getDate();
+          }}
           editable
           eventResizableFromStart={false}
           events={fcEvents}
@@ -291,6 +300,11 @@ export default function StudyCalendar() {
         onDelete={async () => {
           if (!selectedEvent) return;
           await deleteOne(selectedEvent.id);
+          setSelectedEvent(null);
+        }}
+        onDismiss={async () => {
+          if (!selectedEvent) return;
+          await dismiss(selectedEvent.id);
           setSelectedEvent(null);
         }}
       />

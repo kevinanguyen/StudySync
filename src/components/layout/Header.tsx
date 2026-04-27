@@ -3,7 +3,6 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
-import { useLayoutStore } from '@/store/layoutStore';
 import { signOut } from '@/services/auth.service';
 
 interface HeaderIconButtonProps {
@@ -81,14 +80,8 @@ export default function Header() {
   const theme = useUIStore((s) => s.theme);
   const openWelcome = useUIStore((s) => s.openWelcome);
   const resetAuth = useAuthStore((s) => s.reset);
-  const leftCollapsed = useLayoutStore((s) => s.leftSidebarCollapsed);
-  const rightCollapsed = useLayoutStore((s) => s.rightSidebarCollapsed);
-  const toggleLeftSidebar = useLayoutStore((s) => s.toggleLeftSidebar);
-  const toggleRightSidebar = useLayoutStore((s) => s.toggleRightSidebar);
   const nextTheme = theme === 'light' ? 'dark' : 'light';
   const themeToggleLabel = nextTheme === 'dark' ? 'Night mode' : 'Day mode';
-  const leftToggleLabel = leftCollapsed ? 'Expand courses panel' : 'Collapse courses panel';
-  const rightToggleLabel = rightCollapsed ? 'Expand friends panel' : 'Collapse friends panel';
 
   // theme is read from the UI store; no debug logging in production
 
@@ -105,27 +98,16 @@ export default function Header() {
       }`}
       style={{ height: '52px' }}
     >
-      {/* Left sidebar toggle + Logo + Brand */}
+      {/* Logo + Brand */}
       <div className="flex items-center gap-2.5">
-        <HeaderIconButton onClick={toggleLeftSidebar} label={leftToggleLabel}>
-          {leftCollapsed ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
-            </svg>
-          )}
-        </HeaderIconButton>
         {/* Brand mark — theme-switched monkey logo. Black bg of the image is
             intentional sticker styling and matches the rounded badge below. */}
         <img
           src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
           alt="StudySync"
-          className="w-8 h-8 rounded-lg flex-shrink-0 object-cover"
+          className="w-9 h-9 rounded-lg flex-shrink-0 object-cover"
         />
-        <span className="text-lg font-bold tracking-tight">StudySync</span>
+        <span className="text-xl font-bold tracking-tight">StudySync</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -136,21 +118,6 @@ export default function Header() {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" />
           </svg>
-        </HeaderIconButton>
-
-        <HeaderIconButton
-          onClick={toggleRightSidebar}
-          label={rightToggleLabel}
-        >
-          {rightCollapsed ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
-          )}
         </HeaderIconButton>
 
         {/* 🌙 Dark mode toggle */}

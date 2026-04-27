@@ -3,7 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { signUp } from '@/services/auth.service';
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidEmail(email: string): boolean {
+  const trimmed = email.trim().toLowerCase();
+  if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmed)) return false;
+  const [local, domain] = trimmed.split('@');
+  if (local.length < 3) return false;
+  const parts = domain.split('.');
+  const tld = parts[parts.length - 1];
+  const domainName = parts.slice(0, -1).join('.');
+  if (tld.length < 2) return false;
+  if (domainName.length < 2) return false;
+  if (/^[0-9]+$/.test(domainName)) return false;
+  return true;
+}
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -12,6 +24,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [major, setMajor] = useState('');
   const [gradYear, setGradYear] = useState('');
 
@@ -19,13 +32,24 @@ export default function SignupPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const passwordChecks = {
+    length: password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    symbol: /[^A-Za-z0-9]/.test(password),
+    match: password.length > 0 && password === confirmPassword,
+  };
+  const allPasswordOk = Object.values(passwordChecks).every(Boolean);
+  const showPasswordChecklist = password.length > 0 || confirmPassword.length > 0;
+
   function validate() {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required.';
     if (!email.trim()) errs.email = 'Email is required.';
-    else if (!EMAIL_RE.test(email.trim())) errs.email = 'Please enter a valid email.';
+    else if (!isValidEmail(email)) errs.email = 'Please enter a valid school email.';
     if (!password) errs.password = 'Password is required.';
-    else if (password.length < 8) errs.password = 'Password must be at least 8 characters.';
+    else if (!allPasswordOk) errs.password = 'Password does not meet all requirements.';
     if (gradYear && !/^\d{4}$/.test(gradYear)) errs.gradYear = 'Grad year must be 4 digits.';
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
@@ -72,13 +96,14 @@ export default function SignupPage() {
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5" noValidate>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-700">Full name <span className="text-red-500">*</span></span>
+          <span className="text-xs font-semibold text-gray-700">Name <span className="text-red-500">*</span></span>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
             aria-invalid={!!fieldErrors.name}
+            aria-label="Name"
             className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
           />
           {fieldErrors.name && <span className="text-xs text-red-600">{fieldErrors.name}</span>}
@@ -107,8 +132,30 @@ export default function SignupPage() {
             aria-invalid={!!fieldErrors.password}
             className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
           />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-gray-700">Confirm password <span className="text-red-500">*</span></span>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]"
+          />
           {fieldErrors.password && <span className="text-xs text-red-600">{fieldErrors.password}</span>}
         </label>
+
+        {showPasswordChecklist && (
+          <ul className="flex flex-col gap-1 text-xs bg-gray-50 border border-gray-200 rounded-md px-3 py-2" aria-label="Password requirements">
+            <PasswordCheckRow ok={passwordChecks.length} label="At least 8 characters" />
+            <PasswordCheckRow ok={passwordChecks.upper} label="At least one uppercase letter" />
+            <PasswordCheckRow ok={passwordChecks.lower} label="At least one lowercase letter" />
+            <PasswordCheckRow ok={passwordChecks.number} label="At least one number" />
+            <PasswordCheckRow ok={passwordChecks.symbol} label="At least one symbol" />
+            <PasswordCheckRow ok={passwordChecks.match} label="Passwords match" />
+          </ul>
+        )}
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-gray-700">Username (optional)</span>
@@ -154,12 +201,23 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !allPasswordOk}
           className="bg-[#3B5BDB] text-white text-sm font-semibold py-2.5 rounded-md hover:bg-[#3451c7] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-2"
         >
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
     </AuthLayout>
+  );
+}
+
+function PasswordCheckRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <li className={`flex items-center gap-2 ${ok ? 'text-emerald-700' : 'text-gray-500'}`}>
+      <span className={`inline-flex items-center justify-center w-4 h-4 text-[11px] font-bold ${ok ? 'text-emerald-600' : 'text-gray-400'}`} aria-hidden="true">
+        {ok ? '✓' : '•'}
+      </span>
+      <span>{label}</span>
+    </li>
   );
 }

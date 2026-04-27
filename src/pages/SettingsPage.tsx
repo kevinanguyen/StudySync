@@ -112,11 +112,21 @@ export default function SettingsPage() {
     }
   }
 
+  const passwordChecks = {
+    length: newPassword.length >= 8,
+    upper: /[A-Z]/.test(newPassword),
+    lower: /[a-z]/.test(newPassword),
+    number: /[0-9]/.test(newPassword),
+    symbol: /[^A-Za-z0-9]/.test(newPassword),
+    match: newPassword.length > 0 && newPassword === confirmPassword,
+  };
+  const allPasswordOk = Object.values(passwordChecks).every(Boolean);
+  const showPasswordChecklist = newPassword.length > 0 || confirmPassword.length > 0;
+
   async function handlePasswordSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPasswordErr(null);
-    if (newPassword.length < 8) { setPasswordErr('Password must be at least 8 characters.'); return; }
-    if (newPassword !== confirmPassword) { setPasswordErr('Passwords do not match.'); return; }
+    if (!allPasswordOk) { setPasswordErr('Password does not meet all requirements.'); return; }
     setPasswordSubmitting(true);
     try {
       await changePassword(newPassword);
@@ -343,6 +353,21 @@ export default function SettingsPage() {
                   className={`${theme === 'dark' ? 'border border-slate-700 bg-slate-800 text-gray-100 placeholder:text-gray-300' : 'border border-gray-200'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 focus:border-[#3B5BDB]`}
                 />
               </div>
+              {showPasswordChecklist && (
+                <ul
+                  className={`flex flex-col gap-1 text-xs rounded-md px-3 py-2 ${
+                    theme === 'dark' ? 'bg-slate-900/60 border border-slate-700' : 'bg-gray-50 border border-gray-200'
+                  }`}
+                  aria-label="Password requirements"
+                >
+                  <PasswordCheckRow ok={passwordChecks.length} label="At least 8 characters" theme={theme} />
+                  <PasswordCheckRow ok={passwordChecks.upper} label="At least one uppercase letter" theme={theme} />
+                  <PasswordCheckRow ok={passwordChecks.lower} label="At least one lowercase letter" theme={theme} />
+                  <PasswordCheckRow ok={passwordChecks.number} label="At least one number" theme={theme} />
+                  <PasswordCheckRow ok={passwordChecks.symbol} label="At least one symbol" theme={theme} />
+                  <PasswordCheckRow ok={passwordChecks.match} label="Passwords match" theme={theme} />
+                </ul>
+              )}
               {passwordErr && (
                 <div className={`${theme === 'dark' ? 'text-sm text-red-400 bg-red-900/30 border border-red-700 rounded-md px-3 py-2' : 'text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2'}`} role="alert">
                   {passwordErr}
@@ -351,7 +376,7 @@ export default function SettingsPage() {
               <div>
                 <button
                   type="submit"
-                  disabled={passwordSubmitting || !newPassword}
+                  disabled={passwordSubmitting || !allPasswordOk}
                   className={`text-sm font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-4 py-2 rounded-md transition-colors ${
                     theme === 'dark'
                       ? 'disabled:bg-slate-600 disabled:text-gray-300'
@@ -377,5 +402,20 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function PasswordCheckRow({ ok, label, theme }: { ok: boolean; label: string; theme: 'light' | 'dark' }) {
+  const okColor = theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700';
+  const idleColor = theme === 'dark' ? 'text-gray-300' : 'text-gray-500';
+  const okMark = theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600';
+  const idleMark = theme === 'dark' ? 'text-gray-400' : 'text-gray-400';
+  return (
+    <li className={`flex items-center gap-2 ${ok ? okColor : idleColor}`}>
+      <span className={`inline-flex items-center justify-center w-4 h-4 text-[11px] font-bold ${ok ? okMark : idleMark}`} aria-hidden="true">
+        {ok ? '✓' : '•'}
+      </span>
+      <span>{label}</span>
+    </li>
   );
 }

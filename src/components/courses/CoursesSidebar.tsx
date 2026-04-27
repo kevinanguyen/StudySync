@@ -146,7 +146,7 @@ export default function CoursesSidebar() {
               aria-label="Expand courses panel"
               className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
                 theme === 'dark'
-                  ? 'text-gray-300 hover:bg-slate-800'
+                  ? 'text-gray-300 hover:bg-slate-700 hover:text-white'
                   : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
@@ -207,7 +207,7 @@ export default function CoursesSidebar() {
           <Tooltip label="Settings" side="right">
             <button
               onClick={() => navigate('/settings')}
-              className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-gray-50' : 'text-gray-400 hover:text-gray-700'}`}
+              className={`p-1 rounded transition-colors ${theme === 'dark' ? 'text-gray-300 hover:bg-slate-700 hover:text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}
               aria-label="Settings"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -219,7 +219,7 @@ export default function CoursesSidebar() {
           <Tooltip label="Log out" side="right">
             <button
               onClick={handleLogout}
-              className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+              className={`p-1 rounded transition-colors ${theme === 'dark' ? 'text-gray-300 hover:bg-slate-700 hover:text-red-300' : 'text-gray-400 hover:bg-gray-100 hover:text-red-500'}`}
               aria-label="Log out"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -247,8 +247,8 @@ export default function CoursesSidebar() {
           aria-label="Collapse courses panel"
           className={`flex items-center gap-1 px-2 h-[22px] rounded text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             theme === 'dark'
-              ? 'text-gray-300 hover:bg-slate-800'
-              : 'text-gray-500 hover:bg-gray-100'
+              ? 'text-gray-300 hover:bg-slate-700 hover:text-white'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
           }`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

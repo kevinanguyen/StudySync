@@ -100,7 +100,7 @@ export default function RightPanel() {
               aria-label="Expand friends panel"
               className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
                 theme === 'dark'
-                  ? 'text-gray-300 hover:bg-slate-800'
+                  ? 'text-gray-300 hover:bg-slate-700 hover:text-white'
                   : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
@@ -249,8 +249,8 @@ export default function RightPanel() {
           aria-label="Collapse friends panel"
           className={`flex items-center gap-1 px-2 h-[22px] rounded text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             theme === 'dark'
-              ? 'text-gray-300 hover:bg-slate-800'
-              : 'text-gray-500 hover:bg-gray-100'
+              ? 'text-gray-300 hover:bg-slate-700 hover:text-white'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
           }`}
         >
           Collapse

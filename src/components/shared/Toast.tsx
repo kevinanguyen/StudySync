@@ -4,7 +4,6 @@ import { useUIStore } from '@/store/uiStore';
 
 interface ToastProps {
   toast: ToastType;
-  durationMs?: number;
 }
 
 const STYLES: Record<ToastType['level'], { bg: string; border: string; text: string; icon: string }> = {
@@ -13,9 +12,10 @@ const STYLES: Record<ToastType['level'], { bg: string; border: string; text: str
   info:    { bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-900',    icon: 'ⓘ' },
 };
 
-export default function Toast({ toast, durationMs = 3000 }: ToastProps) {
+export default function Toast({ toast }: ToastProps) {
   const dismiss = useUIStore((s) => s.dismissToast);
   const style = STYLES[toast.level];
+  const durationMs = toast.duration ?? 3000;
 
   useEffect(() => {
     const handle = setTimeout(() => dismiss(toast.id), durationMs);
@@ -26,10 +26,19 @@ export default function Toast({ toast, durationMs = 3000 }: ToastProps) {
     <div
       role="status"
       aria-live="polite"
-      className={`flex items-start gap-2 ${style.bg} ${style.border} ${style.text} border rounded-md shadow-sm px-3 py-2 min-w-[220px] max-w-sm`}
+      className={`flex items-center gap-2 ${style.bg} ${style.border} ${style.text} border rounded-md shadow-sm px-3 py-2 min-w-[220px] max-w-sm`}
     >
-      <span aria-hidden className="font-bold text-sm leading-none mt-0.5">{style.icon}</span>
+      <span aria-hidden className="font-bold text-sm leading-none">{style.icon}</span>
       <span className="text-sm flex-1">{toast.message}</span>
+      {toast.onUndo && (
+        <button
+          type="button"
+          onClick={() => { toast.onUndo!(); dismiss(toast.id); }}
+          className="text-xs font-semibold underline underline-offset-2 hover:opacity-70 transition-opacity flex-shrink-0"
+        >
+          Undo
+        </button>
+      )}
       <button
         type="button"
         onClick={() => dismiss(toast.id)}

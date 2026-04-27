@@ -15,7 +15,7 @@ interface EventDetailsPanelProps {
   currentUserId: string | null;
   onClose: () => void;
   onUpdate: (patch: Partial<Omit<EventInput, 'owner_id'>>) => Promise<void>;
-  onDelete: () => Promise<void>;
+  onDelete: () => void;
   /** Optional: hide a shared event from the viewer's calendar (no effect on the owner). */
   onDismiss?: () => Promise<void>;
 }
@@ -159,16 +159,9 @@ export default function EventDetailsPanel({ event, courses, currentUserId, onClo
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     setConfirmDelete(false);
-    try {
-      await onDelete();
-      showToast({ level: 'success', message: 'Event deleted' });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to delete.';
-      setErr(msg);
-      showToast({ level: 'error', message: msg });
-    }
+    onDelete();
   }
 
   return (

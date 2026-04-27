@@ -6,6 +6,8 @@ export interface Toast {
   id: string;
   level: ToastLevel;
   message: string;
+  duration?: number;
+  onUndo?: () => void;
 }
 
 type Theme = 'light' | 'dark';
@@ -24,7 +26,7 @@ interface UIState {
   textScale: number;
   setTextScale: (scale: number) => void;
 
-  showToast: (input: { level: ToastLevel; message: string; duration?: number }) => string;
+  showToast: (input: { level: ToastLevel; message: string; duration?: number; onUndo?: () => void }) => string;
   dismissToast: (id: string) => void;
 }
 
@@ -72,11 +74,11 @@ export const useUIStore = create<UIState>((set) => ({
       return { theme: next };
     }),
 
-  showToast: ({ level, message, duration = 3000 }) => {
+  showToast: ({ level, message, duration = 3000, onUndo }) => {
     const id = makeId();
 
     set((s) => ({
-      toasts: [...s.toasts, { id, level, message }],
+      toasts: [...s.toasts, { id, level, message, duration, onUndo }],
     }));
 
     setTimeout(() => {

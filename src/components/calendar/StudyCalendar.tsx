@@ -64,12 +64,13 @@ export default function StudyCalendar() {
   const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate]);
   const weekEnd = useMemo(() => endOfWeek(anchorDate), [anchorDate]);
 
-  const { events, createOne, updateOne, patchLocal, deleteOne, dismiss } = useEvents(weekStart, weekEnd);
+  const { events, createOne, updateOne, patchLocal, removeLocal, deleteOne, dismiss } = useEvents(weekStart, weekEnd);
   const { courses, classMeetings } = useCourses();
 
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const centralClock = useCentralClock();
   const theme = useUIStore((s) => s.theme);
+  const showToast = useUIStore((s) => s.showToast);
 
   const expandedMeetings = useMemo(() => expandClassMeetings(classMeetings, weekStart), [classMeetings, weekStart]);
 
@@ -303,10 +304,25 @@ export default function StudyCalendar() {
           const updated = await updateOne(selectedEvent.id, patch);
           setSelectedEvent(updated);
         }}
-        onDelete={async () => {
+        onDelete={() => {
           if (!selectedEvent) return;
-          await deleteOne(selectedEvent.id);
+          const id = selectedEvent.id;
           setSelectedEvent(null);
+          const restore = removeLocal(id);
+          let undone = false;
+          const timer = setTimeout(() => {
+            if (!undone) deleteOne(id).catch(() => restore());
+          }, 5000);
+          showToast({
+            level: 'success',
+            message: 'Event deleted',
+            duration: 5000,
+            onUndo: () => {
+              undone = true;
+              clearTimeout(timer);
+              restore();
+            },
+          });
         }}
         onDismiss={async () => {
           if (!selectedEvent) return;

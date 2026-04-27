@@ -13,6 +13,8 @@ interface UseEventsResult {
   updateOne: (id: string, patch: Partial<Omit<EventInput, 'owner_id'>>) => Promise<EventWithOwner>;
   /** Optimistic local update — use for drag/resize. Returns a rollback function. */
   patchLocal: (id: string, patch: Partial<EventRow>) => () => void;
+  /** Optimistic local removal — use for undo-able deletes. Returns a restore function. */
+  removeLocal: (id: string) => () => void;
   deleteOne: (id: string) => Promise<void>;
   /** Hide a shared event from this user's calendar without affecting the underlying row. */
   dismiss: (id: string) => Promise<void>;
@@ -113,6 +115,21 @@ export function useEvents(weekStart: Date, weekEnd: Date): UseEventsResult {
     };
   }, []);
 
+  const removeLocal = useCallback((id: string) => {
+    let removed: EventWithOwner | undefined;
+    setEvents((prev) => {
+      removed = prev.find((e) => e.id === id);
+      return prev.filter((e) => e.id !== id);
+    });
+    return () => {
+      if (!removed) return;
+      const snap = removed;
+      setEvents((prev) =>
+        [...prev, snap].sort((a, b) => a.start_at.localeCompare(b.start_at))
+      );
+    };
+  }, []);
+
   const deleteOne = useCallback(async (id: string) => {
     await deleteEvent(id);
     setEvents((prev) => prev.filter((e) => e.id !== id));
@@ -125,5 +142,5 @@ export function useEvents(weekStart: Date, weekEnd: Date): UseEventsResult {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
-  return { events, loading, error, reload, createOne, updateOne, patchLocal, deleteOne, dismiss };
+  return { events, loading, error, reload, createOne, updateOne, patchLocal, removeLocal, deleteOne, dismiss };
 }

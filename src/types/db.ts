@@ -446,6 +446,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_color: string
+          avatar_source_url: string | null
           avatar_url: string | null
           created_at: string
           grad_year: number | null
@@ -460,6 +461,7 @@ export type Database = {
         }
         Insert: {
           avatar_color?: string
+          avatar_source_url?: string | null
           avatar_url?: string | null
           created_at?: string
           grad_year?: number | null
@@ -474,6 +476,7 @@ export type Database = {
         }
         Update: {
           avatar_color?: string
+          avatar_source_url?: string | null
           avatar_url?: string | null
           created_at?: string
           grad_year?: number | null

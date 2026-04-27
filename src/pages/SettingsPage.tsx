@@ -30,6 +30,11 @@ export default function SettingsPage() {
   const [avatarColor, setAvatarColor] = useState(AVATAR_PALETTE[0]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
+  // Set when the user picks a NEW source image; null while just re-cropping
+  // a previously-uploaded original. The parent only uploads the original
+  // when this is non-null.
+  const [avatarSourceBlob, setAvatarSourceBlob] = useState<Blob | null>(null);
+  const [avatarSourceMime, setAvatarSourceMime] = useState<string | null>(null);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [profileErr, setProfileErr] = useState<string | null>(null);
 
@@ -54,6 +59,8 @@ export default function SettingsPage() {
     setAvatarColor(profile.avatar_color);
     setAvatarUrl(profile.avatar_url);
     setAvatarBlob(null);
+    setAvatarSourceBlob(null);
+    setAvatarSourceMime(null);
     setStatus(profile.status);
     setStatusText(profile.status_text ?? '');
   }, [profile]);
@@ -76,7 +83,20 @@ export default function SettingsPage() {
     if (gradYear && !/^\d{4}$/.test(gradYear)) { setProfileErr('Grad year must be 4 digits.'); return; }
     setProfileSubmitting(true);
     try {
-      const nextAvatarUrl = avatarBlob ? await uploadProfileAvatar(profile.id, avatarBlob) : profile.avatar_url;
+      // Upload the cropped avatar (the displayed circle) when the user changed it.
+      const nextAvatarUrl = avatarBlob
+        ? await uploadProfileAvatar(profile.id, avatarBlob, 'cropped')
+        : profile.avatar_url;
+      // Upload the ORIGINAL source image only when the user picked a fresh
+      // file this session — re-cropping a previously-saved source doesn't
+      // require re-uploading the original.
+      const nextAvatarSourceUrl = avatarSourceBlob
+        ? await uploadProfileAvatar(
+            profile.id,
+            new Blob([avatarSourceBlob], { type: avatarSourceMime ?? 'image/png' }),
+            'source'
+          )
+        : profile.avatar_source_url;
       const updated = await updateProfile(profile.id, {
         name,
         username,
@@ -84,10 +104,13 @@ export default function SettingsPage() {
         grad_year: gradYear ? Number(gradYear) : null,
         avatar_color: avatarColor,
         avatar_url: nextAvatarUrl,
+        avatar_source_url: nextAvatarSourceUrl,
       });
       setProfileInStore(updated);
       setAvatarUrl(updated.avatar_url);
       setAvatarBlob(null);
+      setAvatarSourceBlob(null);
+      setAvatarSourceMime(null);
       showToast({ level: 'success', message: 'Profile updated' });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to update profile.';
@@ -178,9 +201,14 @@ export default function SettingsPage() {
               <AvatarImageEditor
                 avatarColor={avatarColor}
                 avatarUrl={avatarUrl}
+                avatarSourceUrl={profile.avatar_source_url}
                 initials={profile.initials}
-                onAvatarReady={({ blob, previewUrl }) => {
-                  setAvatarBlob(blob);
+                onAvatarReady={({ cropped, originalBlob, originalMimeType, previewUrl }) => {
+                  setAvatarBlob(cropped);
+                  if (originalBlob) {
+                    setAvatarSourceBlob(originalBlob);
+                    setAvatarSourceMime(originalMimeType);
+                  }
                   if (previewUrl) setAvatarUrl(previewUrl);
                 }}
               />

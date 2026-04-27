@@ -18,6 +18,9 @@ export interface ProfileUpdateInput {
   grad_year?: number | null;
   avatar_color?: string;
   avatar_url?: string | null;
+  /** URL of the original (uncropped) avatar source — what the editor re-loads
+   * so a user can come back later and adjust the crop without re-uploading. */
+  avatar_source_url?: string | null;
 }
 
 /** Update editable profile fields for the current user. */
@@ -29,6 +32,7 @@ export async function updateProfile(userId: string, patch: ProfileUpdateInput): 
   if (patch.grad_year !== undefined) clean.grad_year = patch.grad_year ?? null;
   if (patch.avatar_color !== undefined) clean.avatar_color = patch.avatar_color;
   if (patch.avatar_url !== undefined) clean.avatar_url = patch.avatar_url;
+  if (patch.avatar_source_url !== undefined) clean.avatar_source_url = patch.avatar_source_url;
 
   // Keep initials in sync with name changes.
   if (patch.name !== undefined) {
@@ -64,11 +68,30 @@ export async function updateStatus(userId: string, status: UserStatus, statusTex
   return data;
 }
 
-export async function uploadProfileAvatar(userId: string, file: Blob): Promise<string> {
-  const path = `${userId}/${Date.now()}.png`;
+/**
+ * Upload an image to the user's avatar storage folder.
+ *
+ * Two kinds of uploads:
+ *   - `cropped`: the 512×512 displayed avatar. Goes into `avatar_url`.
+ *   - `source`: the user's original uncropped upload. Goes into
+ *     `avatar_source_url` so the editor can re-load it later for re-cropping.
+ *
+ * Both live under `avatars/{userId}/` so a single set of storage RLS
+ * policies (already applied in migration 0008) governs everything.
+ */
+export async function uploadProfileAvatar(
+  userId: string,
+  file: Blob,
+  kind: 'cropped' | 'source' = 'cropped'
+): Promise<string> {
+  // Pick a sensible extension from the blob's mime type. Fallback to png.
+  const ext = file.type === 'image/jpeg' ? 'jpg'
+    : file.type === 'image/webp' ? 'webp'
+    : 'png';
+  const path = `${userId}/${kind}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from('avatars').upload(path, file, {
     upsert: false,
-    contentType: 'image/png',
+    contentType: file.type || 'image/png',
   });
   if (error) {
     if (/bucket.*not found/i.test(error.message)) {

@@ -8,8 +8,26 @@ const OUTPUT_SIZE = 512;
 interface AvatarImageEditorProps {
   avatarColor: string;
   avatarUrl: string | null;
+  /**
+   * URL of the user's previously-uploaded ORIGINAL (uncropped) image, if any.
+   * When set, the editor pre-loads it on mount so the user can re-position the
+   * crop without re-uploading from disk.
+   */
+  avatarSourceUrl?: string | null;
   initials: string;
-  onAvatarReady: (input: { blob: Blob | null; previewUrl: string | null }) => void;
+  /**
+   * Fired whenever the visible crop changes. `cropped` is the 512×512 PNG to
+   * upload as the displayed avatar. `originalBlob` is non-null only when the
+   * user picked a fresh source image (so the parent knows it must upload a
+   * new source); when the user is just re-positioning a previously-saved
+   * source, `originalBlob` stays null.
+   */
+  onAvatarReady: (input: {
+    cropped: Blob | null;
+    originalBlob: Blob | null;
+    originalMimeType: string | null;
+    previewUrl: string | null;
+  }) => void;
 }
 
 interface CropImageState {
@@ -72,12 +90,17 @@ async function makeCroppedAvatar(image: CropImageState, position: Position): Pro
   });
 }
 
-export default function AvatarImageEditor({ avatarColor, avatarUrl, initials, onAvatarReady }: AvatarImageEditorProps) {
+export default function AvatarImageEditor({ avatarColor, avatarUrl, avatarSourceUrl, initials, onAvatarReady }: AvatarImageEditorProps) {
   const theme = useUIStore((s) => s.theme);
   const [image, setImage] = useState<CropImageState | null>(null);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Holds the user's freshly-picked original file. Stays null while the user
+  // is re-positioning a previously-saved source (so the parent only uploads a
+  // new source when the user actually picked a new one).
+  const originalBlobRef = useRef<Blob | null>(null);
+  const originalMimeRef = useRef<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
@@ -91,6 +114,43 @@ export default function AvatarImageEditor({ avatarColor, avatarUrl, initials, on
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
   }, []);
+
+  // Pre-load the user's previously-uploaded ORIGINAL image on mount so they
+  // can re-position the crop without re-uploading. Only fires once per
+  // distinct `avatarSourceUrl` value.
+  useEffect(() => {
+    if (!avatarSourceUrl) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = avatarSourceUrl;
+        await img.decode();
+        if (cancelled) return;
+
+        const nextImage: CropImageState = {
+          src: avatarSourceUrl,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        };
+        const nextPosition = getCenteredPosition(nextImage);
+
+        // Only seed the editor if no image is loaded yet — don't clobber a
+        // fresh upload the user already made in this session.
+        if (!image) {
+          originalBlobRef.current = null; // existing source — no re-upload needed
+          originalMimeRef.current = null;
+          setImage(nextImage);
+          setPosition(nextPosition);
+        }
+      } catch {
+        // Network / CORS error — silently fall back to "no preloaded image".
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avatarSourceUrl]);
 
   async function handleFileChange(file: File | null) {
     if (!file) return;
@@ -112,11 +172,21 @@ export default function AvatarImageEditor({ avatarColor, avatarUrl, initials, on
       };
       const nextPosition = getCenteredPosition(nextImage);
 
+      // Stash the freshly-picked file so the parent uploads it as the new
+      // original source on the next save.
+      originalBlobRef.current = file;
+      originalMimeRef.current = file.type || null;
+
       setImage(nextImage);
       setPosition(nextPosition);
 
       const cropped = await makeCroppedAvatar(nextImage, nextPosition);
-      onAvatarReady({ blob: cropped, previewUrl: objectUrl });
+      onAvatarReady({
+        cropped,
+        originalBlob: originalBlobRef.current,
+        originalMimeType: originalMimeRef.current,
+        previewUrl: objectUrl,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load image.');
     }
@@ -127,7 +197,12 @@ export default function AvatarImageEditor({ avatarColor, avatarUrl, initials, on
     const clamped = clampPosition(nextPosition, image);
     setPosition(clamped);
     const cropped = await makeCroppedAvatar(image, clamped);
-    onAvatarReady({ blob: cropped, previewUrl: image.src });
+    onAvatarReady({
+      cropped,
+      originalBlob: originalBlobRef.current,
+      originalMimeType: originalMimeRef.current,
+      previewUrl: image.src,
+    });
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {

@@ -10,6 +10,8 @@ export interface Profile {
   grad_year: number | null;
   avatar_color: string;
   avatar_url: string | null;
+  /** URL of the original (uncropped) image so the editor can re-load it for re-positioning. */
+  avatar_source_url: string | null;
   initials: string;
   status: 'available' | 'studying' | 'busy';
   status_text: string | null;

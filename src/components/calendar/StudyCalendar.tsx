@@ -27,21 +27,24 @@ function EventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const isShared = event.extendedProps.kind === 'event' && !event.startEditable;
   const ownerProfile = event.extendedProps.owner_profile as EventOwnerInfo | null | undefined;
   return (
-    <div className="h-full flex items-start gap-1 px-1 py-0.5 overflow-hidden">
-      {isShared && ownerProfile && (
-        <span
-          title={`Created by ${ownerProfile.name}`}
-          aria-label={`Created by ${ownerProfile.name}`}
-        >
-          <Avatar user={{ avatarColor: ownerProfile.avatar_color, avatarUrl: ownerProfile.avatar_url, initials: ownerProfile.initials }} size="sm" className="scale-[0.57] origin-top-left ring-1 ring-white/70 rounded-full" />
-        </span>
-      )}
+    <div className="h-full flex items-center gap-1 px-1 py-0.5 overflow-hidden">
+      {/* Title + time on the LEFT, takes all remaining space. */}
       <div className="flex-1 min-w-0 flex flex-col">
         <span className={`font-bold text-[0.68rem] leading-tight truncate ${isClassMeeting ? 'opacity-70' : ''}`}>
           {event.title}
         </span>
         <span className="text-[0.6rem] opacity-80 leading-tight truncate">{eventInfo.timeText}</span>
       </div>
+      {/* Creator avatar pinned to the RIGHT for shared events only. */}
+      {isShared && ownerProfile && (
+        <span
+          title={`Created by ${ownerProfile.name}`}
+          aria-label={`Created by ${ownerProfile.name}`}
+          className="flex-shrink-0"
+        >
+          <Avatar user={{ avatarColor: ownerProfile.avatar_color, avatarUrl: ownerProfile.avatar_url, initials: ownerProfile.initials }} size="sm" className="scale-[0.57] origin-center ring-1 ring-white/70 rounded-full" />
+        </span>
+      )}
     </div>
   );
 }

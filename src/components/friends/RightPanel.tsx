@@ -6,10 +6,12 @@ import FriendRequestsPanel from './FriendRequestsPanel';
 import FriendProfileModal from './FriendProfileModal';
 import CreateGroupModal from '../groups/CreateGroupModal';
 import ConfirmDialog from '../shared/ConfirmDialog';
+import { useDMs } from '@/hooks/useDMs';
 import { useFriends } from '@/hooks/useFriends';
 import { useGroups } from '@/hooks/useGroups';
 import { statusConfig } from '@/lib/status';
 import { useUIStore } from '@/store/uiStore';
+import { useLayoutStore } from '@/store/layoutStore';
 import { FriendRowSkeleton } from '../shared/Skeleton';
 import EmptyState from '../shared/EmptyState';
 import type { FriendshipWithProfile, Profile } from '@/services/friends.service';
@@ -23,11 +25,13 @@ export default function RightPanel() {
   const navigate = useNavigate();
   const { accepted, incoming, loading, remove: removeFriend } = useFriends();
   const { groups, loading: groupsLoading, create: createGroup } = useGroups();
+  const { conversations: dms, loading: dmsLoading } = useDMs();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
   const [unfriendTarget, setUnfriendTarget] = useState<FriendshipWithProfile | null>(null);
   const [profileTarget, setProfileTarget] = useState<Profile | null>(null);
   const theme = useUIStore((s) => s.theme);
+  const collapsed = useLayoutStore((s) => s.rightSidebarCollapsed);
 
   async function handleConfirmUnfriend() {
     if (!unfriendTarget) return;
@@ -49,6 +53,167 @@ export default function RightPanel() {
 
   const FRIEND_LIMIT = 4;
   const displayedFriends = showMoreFriends ? filteredFriends : filteredFriends.slice(0, FRIEND_LIMIT);
+
+  // Shared modals — rendered in both render paths so collapsed-rail clicks
+  // (avatar → FriendProfileModal, + → AddFriendModal) work identically.
+  const modals = (
+    <>
+      <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
+      <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
+      <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} onCreate={createGroup} />
+      <FriendProfileModal
+        open={!!profileTarget}
+        profile={profileTarget}
+        onClose={() => setProfileTarget(null)}
+        onUnfriend={profileTarget ? () => {
+          const match = accepted.find((f) => f.other.id === profileTarget.id);
+          setProfileTarget(null);
+          if (match) setUnfriendTarget(match);
+        } : undefined}
+      />
+      <ConfirmDialog
+        open={!!unfriendTarget}
+        title="Unfriend this person?"
+        message={unfriendTarget ? `You'll no longer see ${unfriendTarget.other.name}'s shared study blocks. You can send a new friend request anytime.` : ''}
+        confirmLabel="Unfriend"
+        destructive
+        onConfirm={handleConfirmUnfriend}
+        onCancel={() => setUnfriendTarget(null)}
+      />
+    </>
+  );
+
+  if (collapsed) {
+    return (
+      <aside
+        className={`flex flex-col items-center ${theme === 'dark' ? 'bg-slate-900 border-l border-slate-700' : 'bg-white border-l border-gray-200'}`}
+        style={{ width: '48px', minWidth: '48px' }}
+      >
+        {/* Top action row: add friend + pending indicator */}
+        <div className="flex flex-col items-center gap-1.5 pt-3 pb-2 w-full flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setAddFriendOpen(true)}
+            aria-label="Add friend"
+            title="Add friend"
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
+              theme === 'dark'
+                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+            }`}
+          >
+            +
+          </button>
+          {incoming.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setRequestsOpen(true)}
+              aria-label={`${incoming.length} pending friend requests`}
+              title={`${incoming.length} pending friend request${incoming.length === 1 ? '' : 's'}`}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold leading-none text-white bg-[#3B5BDB] hover:bg-[#3451c7] transition-colors"
+            >
+              !
+            </button>
+          )}
+        </div>
+
+        <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-2 py-1">
+          {/* Friend avatars */}
+          {loading && accepted.length === 0 && (
+            <>
+              <div className={`w-8 h-8 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+              <div className={`w-8 h-8 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+            </>
+          )}
+          {accepted.map((f) => {
+            const cfg = statusConfig[f.other.status];
+            return (
+              <button
+                key={f.other.id}
+                type="button"
+                onClick={() => setProfileTarget(f.other)}
+                aria-label={`View ${f.other.name}'s profile`}
+                title={f.other.name}
+                className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
+              >
+                <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials }} size="sm" />
+                <span
+                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
+                  style={{ backgroundColor: cfg.color }}
+                />
+              </button>
+            );
+          })}
+
+          {/* Separator between friends and DMs (or groups, if no DMs) */}
+          {(accepted.length > 0 || dms.length > 0 || groups.length > 0) && (
+            <div className={`w-6 h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`} />
+          )}
+
+          {/* DM avatars */}
+          {dms.map(({ group, other }) => {
+            const cfg = statusConfig[other.status];
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => navigate(`/dms/${other.id}`)}
+                aria-label={`Open DM with ${other.name}`}
+                title={other.name}
+                className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
+              >
+                <Avatar user={{ avatarColor: other.avatar_color, avatarUrl: other.avatar_url, initials: other.initials }} size="sm" />
+                <span
+                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
+                  style={{ backgroundColor: cfg.color }}
+                />
+              </button>
+            );
+          })}
+
+          {/* Separator between DMs and groups (only if DMs exist AND something follows) */}
+          {dms.length > 0 && groups.length > 0 && (
+            <div className={`w-6 h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`} />
+          )}
+
+          {/* Group initials */}
+          {groupsLoading && groups.length === 0 && (
+            <div className={`w-8 h-8 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+          )}
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => navigate(`/groups/${g.id}`)}
+              aria-label={`Open ${g.name}`}
+              title={g.name}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
+              style={{ backgroundColor: g.avatar_color }}
+            >
+              {g.initials}
+            </button>
+          ))}
+
+          {/* Create group button at the bottom of the scroll area */}
+          <button
+            type="button"
+            onClick={() => setCreateGroupOpen(true)}
+            aria-label="Create group"
+            title="Create group"
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none flex-shrink-0 transition-colors mt-1 ${
+              theme === 'dark'
+                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+            }`}
+          >
+            +
+          </button>
+        </div>
+
+        {modals}
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -165,6 +330,58 @@ export default function RightPanel() {
           </div>
         </div>
 
+        {/* DIRECT MESSAGES */}
+        <div className="px-3 pt-1 pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1">
+              <span className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>Direct Messages</span>
+            </div>
+          </div>
+
+          {dmsLoading && dms.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
+          {!dmsLoading && dms.length === 0 && (
+            <EmptyState
+              compact
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              }
+              title="No DMs yet"
+              description="Click Message on a friend's profile to start a DM."
+            />
+          )}
+
+          <div className="flex flex-col gap-0.5">
+            {dms.map(({ group, other }) => {
+              const cfg = statusConfig[other.status];
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => navigate(`/dms/${other.id}`)}
+                  aria-label={`Open DM with ${other.name}`}
+                  className={`flex items-center gap-2 px-1.5 py-1.5 rounded-md transition-colors cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/30 ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <Avatar user={{ avatarColor: other.avatar_color, avatarUrl: other.avatar_url, initials: other.initials }} size="sm" />
+                    <span
+                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
+                      style={{ backgroundColor: cfg.color }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`${theme === 'dark' ? 'text-xs font-semibold text-gray-100 leading-tight truncate' : 'text-xs font-semibold text-gray-800 leading-tight truncate'}`}>{other.name}</p>
+                    <p className="text-[10px] truncate" style={{ color: cfg.color }}>
+                      {other.status_text ?? cfg.label}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* GROUPS */}
         <div className="px-3 pt-1 pb-3">
           <div className="flex items-center justify-between mb-2">
@@ -219,28 +436,7 @@ export default function RightPanel() {
         </div>
       </div>
 
-      <AddFriendModal open={addFriendOpen} onClose={() => setAddFriendOpen(false)} />
-      <FriendRequestsPanel open={requestsOpen} onClose={() => setRequestsOpen(false)} />
-      <CreateGroupModal open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} onCreate={createGroup} />
-      <FriendProfileModal
-        open={!!profileTarget}
-        profile={profileTarget}
-        onClose={() => setProfileTarget(null)}
-        onUnfriend={profileTarget ? () => {
-          const match = accepted.find((f) => f.other.id === profileTarget.id);
-          setProfileTarget(null);
-          if (match) setUnfriendTarget(match);
-        } : undefined}
-      />
-      <ConfirmDialog
-        open={!!unfriendTarget}
-        title="Unfriend this person?"
-        message={unfriendTarget ? `You'll no longer see ${unfriendTarget.other.name}'s shared study blocks. You can send a new friend request anytime.` : ''}
-        confirmLabel="Unfriend"
-        destructive
-        onConfirm={handleConfirmUnfriend}
-        onCancel={() => setUnfriendTarget(null)}
-      />
+      {modals}
     </aside>
   );
 }

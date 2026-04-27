@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import GroupMembersList from '@/components/groups/GroupMembersList';
 import GroupChat from '@/components/groups/GroupChat';
 import UpcomingSessionsCard from '@/components/groups/UpcomingSessionsCard';
-import { getGroup, type Group } from '@/services/groups.service';
+import InviteGroupMembersModal from '@/components/groups/InviteGroupMembersModal';
+import { getGroup, listGroupMembers, type Group, type GroupMemberWithProfile } from '@/services/groups.service';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
@@ -22,6 +23,10 @@ export default function GroupPage() {
   const [notFound, setNotFound] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const [members, setMembers] = useState<GroupMemberWithProfile[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
+
   useEffect(() => {
     if (!groupId) return;
     let cancelled = false;
@@ -30,6 +35,30 @@ export default function GroupPage() {
       .then((g) => { if (cancelled) return; if (!g) setNotFound(true); else setGroup(g); })
       .catch(() => { if (!cancelled) setNotFound(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [groupId]);
+
+  const reloadMembers = useCallback(async () => {
+    if (!groupId) return;
+    setMembersLoading(true);
+    try {
+      const rows = await listGroupMembers(groupId);
+      setMembers(rows);
+    } catch {
+      setMembers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  }, [groupId]);
+
+  useEffect(() => {
+    if (!groupId) return;
+    let cancelled = false;
+    setMembersLoading(true);
+    listGroupMembers(groupId)
+      .then((rows) => { if (!cancelled) setMembers(rows); })
+      .catch(() => { if (!cancelled) setMembers([]); })
+      .finally(() => { if (!cancelled) setMembersLoading(false); });
     return () => { cancelled = true; };
   }, [groupId]);
 
@@ -66,12 +95,13 @@ export default function GroupPage() {
   }
 
   const isOwner = group.owner_id === userId;
+  const existingMemberIds = members.map((m) => m.member.user_id);
 
   return (
     <div className={`flex flex-col h-screen overflow-hidden ${theme === 'dark' ? 'bg-slate-950' : 'bg-gray-50'}`}>
       <Header />
       <div className="flex flex-1 min-h-0">
-        
+
         <aside className={`flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-r border-slate-700' : 'bg-white border-r border-gray-200'}`} style={{ width: '260px', minWidth: '260px' }}>
           <div className={`px-4 py-3 flex-shrink-0 ${theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-gray-100'}`}>
             <button type="button" onClick={() => navigate('/dashboard')} className="text-xs text-[#3B5BDB] font-semibold hover:underline mb-2 flex items-center gap-1">← Back to dashboard</button>
@@ -85,7 +115,12 @@ export default function GroupPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            <GroupMembersList groupId={groupId} />
+            <GroupMembersList
+              members={members}
+              loading={membersLoading}
+              isOwner={isOwner}
+              onInvite={() => setInviteOpen(true)}
+            />
           </div>
 
           {isOwner && (
@@ -106,6 +141,17 @@ export default function GroupPage() {
       </div>
 
       <ConfirmDialog open={confirmDelete} title="Delete this group?" message="All messages and member associations will be deleted. This cannot be undone." confirmLabel="Delete group" destructive onConfirm={handleDelete} onCancel={() => setConfirmDelete(false)} />
+
+      {isOwner && (
+        <InviteGroupMembersModal
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          groupId={groupId}
+          groupName={group.name}
+          existingMemberIds={existingMemberIds}
+          onInvited={() => { void reloadMembers(); }}
+        />
+      )}
     </div>
   );
 }

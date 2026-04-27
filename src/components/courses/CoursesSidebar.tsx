@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth.service';
 import { statusConfig } from '@/lib/status';
 import { useUIStore } from '@/store/uiStore';
+import { useLayoutStore } from '@/store/layoutStore';
 import { updateStatus } from '@/services/profile.service';
 import { CourseRowSkeleton } from '../shared/Skeleton';
 import EmptyState from '../shared/EmptyState';
@@ -30,6 +31,7 @@ export default function CoursesSidebar() {
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const showToast = useUIStore((s) => s.showToast);
   const theme = useUIStore((s) => s.theme);
+  const collapsed = useLayoutStore((s) => s.leftSidebarCollapsed);
 
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -93,6 +95,122 @@ export default function CoursesSidebar() {
   }
 
   const statusCfg = profile ? statusConfig[profile.status] : statusConfig.available;
+
+  // Shared modal/dialog block — rendered in both modes so collapsed-rail
+  // swatch clicks can still open the EditCourseModal.
+  const modals = (
+    <>
+      <AddCourseModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        existingCourses={courses}
+        onAddCourse={addCourse}
+        onAddMeeting={addMeeting}
+      />
+      <EditCourseModal
+        open={!!editTarget}
+        course={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSave={updateCourse}
+      />
+      <ConfirmDialog
+        open={!!dropTarget}
+        title="Drop this course?"
+        message={
+          dropTarget
+            ? `Your class meetings for ${dropTarget.code} will be removed. Study events tagged with this course will keep their time but lose the course label.`
+            : ''
+        }
+        confirmLabel="Drop course"
+        loadingLabel="Dropping…"
+        loading={dropping}
+        destructive
+        onConfirm={handleConfirmDrop}
+        onCancel={() => { if (!dropping) setDropTarget(null); }}
+      />
+    </>
+  );
+
+  if (collapsed) {
+    return (
+      <aside
+        className={`flex flex-col items-center ${theme === 'dark' ? 'bg-slate-900 border-r border-slate-700' : 'bg-white border-r border-gray-200'}`}
+        style={{ width: '48px', minWidth: '48px' }}
+      >
+        <div className="flex flex-col items-center gap-1.5 pt-3 pb-2 w-full flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            aria-label="Add course"
+            title="Add course"
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
+              theme === 'dark'
+                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+            }`}
+          >
+            +
+          </button>
+        </div>
+
+        <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-1.5 py-1">
+          {loading && courses.length === 0 && (
+            <>
+              <div className={`w-7 h-7 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+              <div className={`w-7 h-7 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+              <div className={`w-7 h-7 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+            </>
+          )}
+          {courses.map((course) => (
+            <button
+              key={course.id}
+              type="button"
+              onClick={() => setEditTarget(course)}
+              aria-label={`Edit ${course.code}`}
+              title={`${course.code} · ${course.name}`}
+              className="w-7 h-7 rounded-full flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
+              style={{ backgroundColor: course.color }}
+            />
+          ))}
+        </div>
+
+        <div className={`flex flex-col items-center gap-1 py-2 w-full border-t flex-shrink-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
+          {profile && (
+            <div title={profile.name}>
+              <Avatar
+                user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
+                size="md"
+                showStatus
+              />
+            </div>
+          )}
+          <button
+            onClick={() => navigate('/settings')}
+            className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-gray-50' : 'text-gray-400 hover:text-gray-700'}`}
+            aria-label="Settings"
+            title="Settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleLogout}
+            className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+            aria-label="Log out"
+            title="Log out"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+
+        {modals}
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -290,34 +408,7 @@ export default function CoursesSidebar() {
         </div>
       </div>
 
-      <AddCourseModal
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        existingCourses={courses}
-        onAddCourse={addCourse}
-        onAddMeeting={addMeeting}
-      />
-      <EditCourseModal
-        open={!!editTarget}
-        course={editTarget}
-        onClose={() => setEditTarget(null)}
-        onSave={updateCourse}
-      />
-      <ConfirmDialog
-        open={!!dropTarget}
-        title="Drop this course?"
-        message={
-          dropTarget
-            ? `Your class meetings for ${dropTarget.code} will be removed. Study events tagged with this course will keep their time but lose the course label.`
-            : ''
-        }
-        confirmLabel="Drop course"
-        loadingLabel="Dropping…"
-        loading={dropping}
-        destructive
-        onConfirm={handleConfirmDrop}
-        onCancel={() => { if (!dropping) setDropTarget(null); }}
-      />
+      {modals}
     </aside>
   );
 }

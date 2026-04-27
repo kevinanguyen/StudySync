@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { statusConfig } from '@/lib/status';
 import type { Profile } from '@/services/friends.service';
+import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
 import Avatar from '@/components/shared/Avatar';
 
@@ -14,7 +16,9 @@ interface FriendProfileModalProps {
 
 export default function FriendProfileModal({ open, profile, onClose, onUnfriend }: FriendProfileModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const theme = useUIStore((s) => s.theme); 
+  const theme = useUIStore((s) => s.theme);
+  const navigate = useNavigate();
+  const currentUserId = useAuthStore((s) => s.session?.user.id ?? null);
 
   useFocusTrap(panelRef, open);
 
@@ -105,22 +109,46 @@ export default function FriendProfileModal({ open, profile, onClose, onUnfriend 
               <p className={`text-xs italic mt-3 ${ theme === 'dark' ? 'text-gray-500' : 'text-gray-400' }`}>{profile.name.split(' ')[0]} hasn't filled out their profile yet.</p>
             )}
 
-            {onUnfriend && (
-              <div className={`mt-5 pt-4 border-t flex justify-end ${
-                  theme === 'dark' ? 'border-slate-700' : 'border-gray-100'
-                }`}>
-                <button
-                  type="button"
-                  onClick={onUnfriend}
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
-                    theme === 'dark'
-                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-                      : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                  }`}                >
-                  Unfriend
-                </button>
-              </div>
-            )}
+            {(() => {
+              const showMessage = !!currentUserId && currentUserId !== profile.id;
+              if (!showMessage && !onUnfriend) return null;
+              return (
+                <div className={`mt-5 pt-4 border-t flex items-center gap-2 ${
+                    showMessage && onUnfriend ? 'justify-between' : 'justify-end'
+                  } ${
+                    theme === 'dark' ? 'border-slate-700' : 'border-gray-100'
+                  }`}>
+                  {showMessage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigate(`/dms/${profile.id}`);
+                        onClose();
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors bg-[#3B5BDB] hover:bg-[#3451c7] text-white"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Message
+                    </button>
+                  )}
+                  {onUnfriend && (
+                    <button
+                      type="button"
+                      onClick={onUnfriend}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
+                        theme === 'dark'
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                      }`}
+                    >
+                      Unfriend
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

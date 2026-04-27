@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
+import { useLayoutStore } from '@/store/layoutStore';
 import { signOut } from '@/services/auth.service';
 
 interface HeaderIconButtonProps {
@@ -80,8 +81,14 @@ export default function Header() {
   const theme = useUIStore((s) => s.theme);
   const openWelcome = useUIStore((s) => s.openWelcome);
   const resetAuth = useAuthStore((s) => s.reset);
+  const leftCollapsed = useLayoutStore((s) => s.leftSidebarCollapsed);
+  const rightCollapsed = useLayoutStore((s) => s.rightSidebarCollapsed);
+  const toggleLeftSidebar = useLayoutStore((s) => s.toggleLeftSidebar);
+  const toggleRightSidebar = useLayoutStore((s) => s.toggleRightSidebar);
   const nextTheme = theme === 'light' ? 'dark' : 'light';
   const themeToggleLabel = nextTheme === 'dark' ? 'Night mode' : 'Day mode';
+  const leftToggleLabel = leftCollapsed ? 'Expand courses panel' : 'Collapse courses panel';
+  const rightToggleLabel = rightCollapsed ? 'Expand friends panel' : 'Collapse friends panel';
 
   // theme is read from the UI store; no debug logging in production
 
@@ -98,12 +105,23 @@ export default function Header() {
       }`}
       style={{ height: '52px' }}
     >
-      {/* Logo + Brand */}
+      {/* Left sidebar toggle + Logo + Brand */}
       <div className="flex items-center gap-2.5">
+        <HeaderIconButton onClick={toggleLeftSidebar} label={leftToggleLabel}>
+          {leftCollapsed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
+            </svg>
+          )}
+        </HeaderIconButton>
         <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M2 6C2 6 5 5 8 5C10 5 12 6 12 6V20C12 20 10 19 8 19C5 19 2 20 2 20V6Z" fill="white" fillOpacity="0.9"/>
-            <path d="M22 6C22 6 19 5 16 5C14 5 12 6 12 6V20C12 20 14 19 16 19C19 19 22 20 22 20V6Z" fill="white" fillOpacity="0.7"/>
+            <path d="M22 6C22 6 19 5 16 5C14 5 12 6 12 6V20C12 20 10 19 8 19C5 19 2 20 2 20V6Z" fill="white" fillOpacity="0.7"/>
             <path d="M7 3C8.5 2 10.2 2 12 2C13.8 2 15.5 2 17 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
         </div>
@@ -118,6 +136,21 @@ export default function Header() {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" />
           </svg>
+        </HeaderIconButton>
+
+        <HeaderIconButton
+          onClick={toggleRightSidebar}
+          label={rightToggleLabel}
+        >
+          {rightCollapsed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          )}
         </HeaderIconButton>
 
         {/* 🌙 Dark mode toggle */}

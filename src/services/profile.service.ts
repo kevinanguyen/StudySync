@@ -90,9 +90,7 @@ export async function changePassword(newPassword: string): Promise<void> {
     throw new ProfileServiceError('Password must be at least 8 characters.');
   }
 
-  console.log('before updateUser');
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  console.log('after updateUser', error);
 
   if (error) {
     throw new ProfileServiceError(error.message, error);

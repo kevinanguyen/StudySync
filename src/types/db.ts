@@ -325,6 +325,7 @@ export type Database = {
           description: string | null
           id: string
           initials: string
+          is_direct: boolean
           name: string
           owner_id: string
         }
@@ -335,6 +336,7 @@ export type Database = {
           description?: string | null
           id?: string
           initials: string
+          is_direct?: boolean
           name: string
           owner_id: string
         }
@@ -345,6 +347,7 @@ export type Database = {
           description?: string | null
           id?: string
           initials?: string
+          is_direct?: boolean
           name?: string
           owner_id?: string
         }

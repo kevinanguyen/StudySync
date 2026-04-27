@@ -148,7 +148,10 @@ export default function RightPanel() {
           {accepted.map((f) => {
             const cfg = statusConfig[f.other.status];
             return (
-              <Tooltip key={f.other.id} label={f.other.name} side="left">
+              // Friends: circle avatar + status dot. Tooltip prefixed with
+              // "Friend ·" so users can disambiguate friend / DM / group at
+              // a glance even before they've internalized the shape language.
+              <Tooltip key={f.other.id} label={`Friend · ${f.other.name}`} side="left">
                 <button
                   type="button"
                   onClick={() => setProfileTarget(f.other)}
@@ -170,11 +173,14 @@ export default function RightPanel() {
             <div className={`w-6 h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`} />
           )}
 
-          {/* DM avatars */}
+          {/* DM avatars: circle avatar + chat-bubble badge in the bottom-
+              right corner (instead of a status dot). The badge is the
+              primary visual signal that this is a *conversation thread*,
+              not a profile click — same shape as Friends but with a
+              clearly different accent. */}
           {dms.map(({ group, other }) => {
-            const cfg = statusConfig[other.status];
             return (
-              <Tooltip key={group.id} label={other.name} side="left">
+              <Tooltip key={group.id} label={`DM · ${other.name}`} side="left">
                 <button
                   type="button"
                   onClick={() => navigate(`/dms/${other.id}`)}
@@ -183,9 +189,13 @@ export default function RightPanel() {
                 >
                   <Avatar user={{ avatarColor: other.avatar_color, avatarUrl: other.avatar_url, initials: other.initials }} size="sm" />
                   <span
-                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
-                    style={{ backgroundColor: cfg.color }}
-                  />
+                    className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm border ${theme === 'dark' ? 'bg-slate-100 border-slate-900' : 'bg-white border-white'}`}
+                    aria-hidden
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#3B5BDB" className="w-2.5 h-2.5">
+                      <path d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-3.06-.547l-5.06 1.547 1.547-5.06A8.84 8.84 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" />
+                    </svg>
+                  </span>
                 </button>
               </Tooltip>
             );
@@ -200,13 +210,15 @@ export default function RightPanel() {
           {groupsLoading && groups.length === 0 && (
             <div className={`w-8 h-8 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
           )}
+          {/* Groups: squircle (rounded-lg) instead of circle so the shape
+              alone separates "person" from "group" at a glance. */}
           {groups.map((g) => (
-            <Tooltip key={g.id} label={g.name} side="left">
+            <Tooltip key={g.id} label={`Group · ${g.name}`} side="left">
               <button
                 type="button"
                 onClick={() => navigate(`/groups/${g.id}`)}
                 aria-label={`Open ${g.name}`}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
                 style={{ backgroundColor: g.avatar_color }}
               >
                 {g.initials}

@@ -102,8 +102,11 @@ export default function Header() {
           stays at a smaller text size so the mascot reads as the primary
           brand element. */}
       <div className="flex items-center gap-3">
+        {/* Always use the white-monkey (`-dark`) variant — the header bar is
+            the brand blue in both light and dark themes, so the dark-mode
+            asset reads cleanly on it either way. */}
         <img
-          src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
+          src="/brand/monkey-mark-dark.png"
           alt="StudySync"
           className="h-[92px] w-[92px] rounded-lg flex-shrink-0 object-cover"
         />

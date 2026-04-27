@@ -106,7 +106,7 @@ export default function GroupPage() {
           <div className={`px-4 py-3 flex-shrink-0 ${theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-gray-100'}`}>
             <button type="button" onClick={() => navigate('/dashboard')} className="text-xs text-[#3B5BDB] font-semibold hover:underline mb-2 flex items-center gap-1">← Back to dashboard</button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: group.avatar_color }}>{group.initials}</div>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: group.avatar_color }}>{group.initials}</div>
               <div className="min-w-0">
                 <h1 className={`text-base font-bold truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{group.name}</h1>
                 {group.description && <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{group.description}</p>}

@@ -20,6 +20,8 @@ import type { FriendshipWithProfile, Profile } from '@/services/friends.service'
 export default function RightPanel() {
   const [search, setSearch] = useState('');
   const [showMoreFriends, setShowMoreFriends] = useState(false);
+  const [showMoreDMs, setShowMoreDMs] = useState(false);
+  const [showMoreGroups, setShowMoreGroups] = useState(false);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
 
@@ -53,8 +55,12 @@ export default function RightPanel() {
     f.other.name.toLowerCase().includes(lowerSearch) || f.other.username.toLowerCase().includes(lowerSearch)
   );
 
-  const FRIEND_LIMIT = 4;
-  const displayedFriends = showMoreFriends ? filteredFriends : filteredFriends.slice(0, FRIEND_LIMIT);
+  // Default each section to 4 visible items; "Show more / less" toggles
+  // the rest. Keeps the right panel scannable without truncating data.
+  const SECTION_LIMIT = 4;
+  const displayedFriends = showMoreFriends ? filteredFriends : filteredFriends.slice(0, SECTION_LIMIT);
+  const displayedDMs = showMoreDMs ? dms : dms.slice(0, SECTION_LIMIT);
+  const displayedGroups = showMoreGroups ? groups : groups.slice(0, SECTION_LIMIT);
 
   // Shared modals — rendered in both render paths so collapsed-rail clicks
   // (avatar → FriendProfileModal, + → AddFriendModal) work identically.
@@ -312,7 +318,7 @@ export default function RightPanel() {
                 </button>
               )}
             </div>
-            {filteredFriends.length > FRIEND_LIMIT && (
+            {filteredFriends.length > SECTION_LIMIT && (
               <button className={`${theme === 'dark' ? 'text-[10px] text-[#9AB0FF] font-semibold hover:underline' : 'text-[10px] text-[#3B5BDB] font-semibold hover:underline'}`} onClick={() => setShowMoreFriends((v) => !v)}>
                 {showMoreFriends ? 'SHOW LESS' : 'SHOW MORE'}
               </button>
@@ -387,6 +393,11 @@ export default function RightPanel() {
             <div className="flex items-center gap-1">
               <span className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>Direct Messages</span>
             </div>
+            {dms.length > SECTION_LIMIT && (
+              <button className={`${theme === 'dark' ? 'text-[10px] text-[#9AB0FF] font-semibold hover:underline' : 'text-[10px] text-[#3B5BDB] font-semibold hover:underline'}`} onClick={() => setShowMoreDMs((v) => !v)}>
+                {showMoreDMs ? 'SHOW LESS' : 'SHOW MORE'}
+              </button>
+            )}
           </div>
 
           {dmsLoading && dms.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
@@ -404,7 +415,7 @@ export default function RightPanel() {
           )}
 
           <div className="flex flex-col gap-0.5">
-            {dms.map(({ group, other }) => {
+            {displayedDMs.map(({ group, other }) => {
               const cfg = statusConfig[other.status];
               return (
                 <button
@@ -447,6 +458,11 @@ export default function RightPanel() {
                 +
               </button>
             </div>
+            {groups.length > SECTION_LIMIT && (
+              <button className={`${theme === 'dark' ? 'text-[10px] text-[#9AB0FF] font-semibold hover:underline' : 'text-[10px] text-[#3B5BDB] font-semibold hover:underline'}`} onClick={() => setShowMoreGroups((v) => !v)}>
+                {showMoreGroups ? 'SHOW LESS' : 'SHOW MORE'}
+              </button>
+            )}
           </div>
 
           {groupsLoading && groups.length === 0 && <p className="text-[11px] text-gray-400">Loading…</p>}
@@ -465,15 +481,17 @@ export default function RightPanel() {
           )}
 
           <div className="flex flex-col gap-0.5">
-            {groups.map((g) => (
+            {displayedGroups.map((g) => (
               <button
                 key={g.id}
                 type="button"
                 onClick={() => navigate(`/groups/${g.id}`)}
                 className={`flex items-center gap-2 px-1.5 py-1.5 rounded-md transition-colors cursor-pointer text-left ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}
               >
+                {/* Squircle (rounded-lg) — same shape language we use in the
+                    collapsed rail so groups read as "group" everywhere. */}
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
                   style={{ backgroundColor: g.avatar_color }}
                 >
                   {g.initials}

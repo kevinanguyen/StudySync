@@ -96,7 +96,7 @@ export default function Header() {
       className={`flex items-center justify-between px-5 flex-shrink-0 transition-colors duration-200 ease-in-out ${
         theme === 'dark' ? 'bg-[#2d46a8] text-white' : 'bg-[#3B5BDB] text-white'
       }`}
-      style={{ height: '72px' }}
+      style={{ height: '96px' }}
     >
       {/* Logo + Brand. Monkey mark fills the bar's height; the wordmark
           stays at a smaller text size so the mascot reads as the primary
@@ -105,9 +105,9 @@ export default function Header() {
         <img
           src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
           alt="StudySync"
-          className="h-[68px] w-[68px] rounded-lg flex-shrink-0 object-cover"
+          className="h-[92px] w-[92px] rounded-lg flex-shrink-0 object-cover"
         />
-        <span className="text-2xl font-bold tracking-tight">StudySync</span>
+        <span className="text-3xl font-bold tracking-tight">StudySync</span>
       </div>
 
       <div className="flex items-center gap-2">

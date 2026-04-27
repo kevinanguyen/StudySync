@@ -13,6 +13,7 @@ import { useLayoutStore } from '@/store/layoutStore';
 import { updateStatus } from '@/services/profile.service';
 import { CourseRowSkeleton } from '../shared/Skeleton';
 import EmptyState from '../shared/EmptyState';
+import Tooltip from '../shared/Tooltip';
 import type { EnrolledCourse, UserStatus } from '@/types/domain';
 
 export default function CoursesSidebar() {
@@ -138,34 +139,36 @@ export default function CoursesSidebar() {
         style={{ width: '48px', minWidth: '48px' }}
       >
         <div className="flex flex-col items-center gap-1.5 pt-2 pb-2 w-full flex-shrink-0">
-          <button
-            type="button"
-            onClick={toggleLeftSidebar}
-            aria-label="Expand courses panel"
-            title="Expand courses panel"
-            className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
-              theme === 'dark'
-                ? 'text-gray-300 hover:bg-slate-800'
-                : 'text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            aria-label="Add course"
-            title="Add course"
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
-            }`}
-          >
-            +
-          </button>
+          <Tooltip label="Expand courses panel" side="right">
+            <button
+              type="button"
+              onClick={toggleLeftSidebar}
+              aria-label="Expand courses panel"
+              className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'text-gray-300 hover:bg-slate-800'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </Tooltip>
+          <Tooltip label="Add course" side="right">
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              aria-label="Add course"
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+              }`}
+            >
+              +
+            </button>
+          </Tooltip>
         </div>
 
         <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-1.5 py-1">
@@ -177,49 +180,53 @@ export default function CoursesSidebar() {
             </>
           )}
           {courses.map((course) => (
-            <button
-              key={course.id}
-              type="button"
-              onClick={() => setEditTarget(course)}
-              aria-label={`Edit ${course.code}`}
-              title={`${course.code} · ${course.name}`}
-              className="w-7 h-7 rounded-full flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
-              style={{ backgroundColor: course.color }}
-            />
+            <Tooltip key={course.id} label={`${course.code} · ${course.name}`} side="right">
+              <button
+                type="button"
+                onClick={() => setEditTarget(course)}
+                aria-label={`Edit ${course.code}`}
+                className="w-7 h-7 rounded-full flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
+                style={{ backgroundColor: course.color }}
+              />
+            </Tooltip>
           ))}
         </div>
 
         <div className={`flex flex-col items-center gap-1 py-2 w-full border-t flex-shrink-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
           {profile && (
-            <div title={profile.name}>
-              <Avatar
-                user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
-                size="md"
-                showStatus
-              />
-            </div>
+            <Tooltip label={profile.name} side="right">
+              <span>
+                <Avatar
+                  user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
+                  size="md"
+                  showStatus
+                />
+              </span>
+            </Tooltip>
           )}
-          <button
-            onClick={() => navigate('/settings')}
-            className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-gray-50' : 'text-gray-400 hover:text-gray-700'}`}
-            aria-label="Settings"
-            title="Settings"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-          <button
-            onClick={handleLogout}
-            className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
-            aria-label="Log out"
-            title="Log out"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
+          <Tooltip label="Settings" side="right">
+            <button
+              onClick={() => navigate('/settings')}
+              className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-gray-50' : 'text-gray-400 hover:text-gray-700'}`}
+              aria-label="Settings"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </Tooltip>
+          <Tooltip label="Log out" side="right">
+            <button
+              onClick={handleLogout}
+              className={`p-1 transition-colors ${theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+              aria-label="Log out"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </Tooltip>
         </div>
 
         {modals}
@@ -238,8 +245,7 @@ export default function CoursesSidebar() {
           type="button"
           onClick={toggleLeftSidebar}
           aria-label="Collapse courses panel"
-          title="Collapse courses panel"
-          className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+          className={`flex items-center gap-1 px-2 h-[22px] rounded text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             theme === 'dark'
               ? 'text-gray-300 hover:bg-slate-800'
               : 'text-gray-500 hover:bg-gray-100'
@@ -248,15 +254,18 @@ export default function CoursesSidebar() {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
+          Collapse
         </button>
       </div>
       <div className="px-3 pt-1 pb-2 flex-shrink-0">
-        <div className="flex items-center justify-between mb-2">
+        {/* Title row — `+` sits immediately next to "My Courses" instead of pinned to the right edge. */}
+        <div className="flex items-center gap-2 mb-2">
           <p className={`${theme === 'dark' ? 'text-[10px] font-bold text-gray-300 uppercase tracking-widest' : 'text-[10px] font-bold text-gray-500 uppercase tracking-widest'}`}>My Courses</p>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label="Add course"
+            title="Add course"
             className={`${theme === 'dark' ? 'w-4 h-4 rounded-full bg-slate-800 text-gray-300 text-[11px] font-bold flex items-center justify-center hover:bg-slate-700 transition-colors leading-none border border-slate-700' : 'w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold flex items-center justify-center hover:bg-gray-200 transition-colors leading-none border border-gray-200'}`}
           >
             +

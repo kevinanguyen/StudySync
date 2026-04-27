@@ -14,6 +14,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useLayoutStore } from '@/store/layoutStore';
 import { FriendRowSkeleton } from '../shared/Skeleton';
 import EmptyState from '../shared/EmptyState';
+import Tooltip from '../shared/Tooltip';
 import type { FriendshipWithProfile, Profile } from '@/services/friends.service';
 
 export default function RightPanel() {
@@ -92,44 +93,47 @@ export default function RightPanel() {
       >
         {/* Top action row: expand toggle + add friend + pending indicator */}
         <div className="flex flex-col items-center gap-1.5 pt-2 pb-2 w-full flex-shrink-0">
-          <button
-            type="button"
-            onClick={toggleRightSidebar}
-            aria-label="Expand friends panel"
-            title="Expand friends panel"
-            className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
-              theme === 'dark'
-                ? 'text-gray-300 hover:bg-slate-800'
-                : 'text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setAddFriendOpen(true)}
-            aria-label="Add friend"
-            title="Add friend"
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
-            }`}
-          >
-            +
-          </button>
-          {incoming.length > 0 && (
+          <Tooltip label="Expand friends panel" side="left">
             <button
               type="button"
-              onClick={() => setRequestsOpen(true)}
-              aria-label={`${incoming.length} pending friend requests`}
-              title={`${incoming.length} pending friend request${incoming.length === 1 ? '' : 's'}`}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold leading-none text-white bg-[#3B5BDB] hover:bg-[#3451c7] transition-colors"
+              onClick={toggleRightSidebar}
+              aria-label="Expand friends panel"
+              className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'text-gray-300 hover:bg-slate-800'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
             >
-              !
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
+          </Tooltip>
+          <Tooltip label="Add friend" side="left">
+            <button
+              type="button"
+              onClick={() => setAddFriendOpen(true)}
+              aria-label="Add friend"
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+              }`}
+            >
+              +
+            </button>
+          </Tooltip>
+          {incoming.length > 0 && (
+            <Tooltip label={`${incoming.length} pending friend request${incoming.length === 1 ? '' : 's'}`} side="left">
+              <button
+                type="button"
+                onClick={() => setRequestsOpen(true)}
+                aria-label={`${incoming.length} pending friend requests`}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold leading-none text-white bg-[#3B5BDB] hover:bg-[#3451c7] transition-colors"
+              >
+                !
+              </button>
+            </Tooltip>
           )}
         </div>
 
@@ -144,20 +148,20 @@ export default function RightPanel() {
           {accepted.map((f) => {
             const cfg = statusConfig[f.other.status];
             return (
-              <button
-                key={f.other.id}
-                type="button"
-                onClick={() => setProfileTarget(f.other)}
-                aria-label={`View ${f.other.name}'s profile`}
-                title={f.other.name}
-                className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
-              >
-                <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials }} size="sm" />
-                <span
-                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
-                  style={{ backgroundColor: cfg.color }}
-                />
-              </button>
+              <Tooltip key={f.other.id} label={f.other.name} side="left">
+                <button
+                  type="button"
+                  onClick={() => setProfileTarget(f.other)}
+                  aria-label={`View ${f.other.name}'s profile`}
+                  className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
+                >
+                  <Avatar user={{ avatarColor: f.other.avatar_color, avatarUrl: f.other.avatar_url, initials: f.other.initials }} size="sm" />
+                  <span
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
+                    style={{ backgroundColor: cfg.color }}
+                  />
+                </button>
+              </Tooltip>
             );
           })}
 
@@ -170,20 +174,20 @@ export default function RightPanel() {
           {dms.map(({ group, other }) => {
             const cfg = statusConfig[other.status];
             return (
-              <button
-                key={group.id}
-                type="button"
-                onClick={() => navigate(`/dms/${other.id}`)}
-                aria-label={`Open DM with ${other.name}`}
-                title={other.name}
-                className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
-              >
-                <Avatar user={{ avatarColor: other.avatar_color, avatarUrl: other.avatar_url, initials: other.initials }} size="sm" />
-                <span
-                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
-                  style={{ backgroundColor: cfg.color }}
-                />
-              </button>
+              <Tooltip key={group.id} label={other.name} side="left">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/dms/${other.id}`)}
+                  aria-label={`Open DM with ${other.name}`}
+                  className="relative flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1 transition-transform hover:scale-110"
+                >
+                  <Avatar user={{ avatarColor: other.avatar_color, avatarUrl: other.avatar_url, initials: other.initials }} size="sm" />
+                  <span
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${theme === 'dark' ? 'border-slate-900' : 'border-white'}`}
+                    style={{ backgroundColor: cfg.color }}
+                  />
+                </button>
+              </Tooltip>
             );
           })}
 
@@ -197,33 +201,34 @@ export default function RightPanel() {
             <div className={`w-8 h-8 rounded-full animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
           )}
           {groups.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              onClick={() => navigate(`/groups/${g.id}`)}
-              aria-label={`Open ${g.name}`}
-              title={g.name}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
-              style={{ backgroundColor: g.avatar_color }}
-            >
-              {g.initials}
-            </button>
+            <Tooltip key={g.id} label={g.name} side="left">
+              <button
+                type="button"
+                onClick={() => navigate(`/groups/${g.id}`)}
+                aria-label={`Open ${g.name}`}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 focus:ring-offset-1"
+                style={{ backgroundColor: g.avatar_color }}
+              >
+                {g.initials}
+              </button>
+            </Tooltip>
           ))}
 
           {/* Create group button at the bottom of the scroll area */}
-          <button
-            type="button"
-            onClick={() => setCreateGroupOpen(true)}
-            aria-label="Create group"
-            title="Create group"
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none flex-shrink-0 transition-colors mt-1 ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
-            }`}
-          >
-            +
-          </button>
+          <Tooltip label="Create group" side="left">
+            <button
+              type="button"
+              onClick={() => setCreateGroupOpen(true)}
+              aria-label="Create group"
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold leading-none flex-shrink-0 transition-colors mt-1 ${
+                theme === 'dark'
+                  ? 'bg-slate-800 text-gray-200 hover:bg-slate-700 border border-slate-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+              }`}
+            >
+              +
+            </button>
+          </Tooltip>
         </div>
 
         {modals}
@@ -242,13 +247,13 @@ export default function RightPanel() {
           type="button"
           onClick={toggleRightSidebar}
           aria-label="Collapse friends panel"
-          title="Collapse friends panel"
-          className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-colors ${
+          className={`flex items-center gap-1 px-2 h-[22px] rounded text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             theme === 'dark'
               ? 'text-gray-300 hover:bg-slate-800'
               : 'text-gray-500 hover:bg-gray-100'
           }`}
         >
+          Collapse
           <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>

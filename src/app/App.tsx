@@ -7,7 +7,6 @@ import { router } from './routes';
 import ToastContainer from '@/components/shared/ToastContainer';
 import WelcomeTour from '@/components/help/WelcomeTour';
 import { initTheme, useUIStore } from '@/store/uiStore';
-import { useAuthStore } from '@/store/authStore';
 import { useLayoutStore } from '@/store/layoutStore';
 
 export default function App() {
@@ -15,7 +14,6 @@ export default function App() {
   useSupabaseKeepalive();
   const textScale = useUIStore((s) => s.textScale);
   const openWelcome = useUIStore((s) => s.openWelcome);
-  const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const toggleLeftSidebar = useLayoutStore((s) => s.toggleLeftSidebar);
   const toggleRightSidebar = useLayoutStore((s) => s.toggleRightSidebar);
 
@@ -35,13 +33,6 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.fontSize = `${textScale * 100}%`;
   }, [textScale]);
-
-  useEffect(() => {
-    if (!userId || typeof window === 'undefined') return;
-    if (localStorage.getItem('studysync.showWelcome') !== 'true') return;
-    localStorage.removeItem('studysync.showWelcome');
-    openWelcome();
-  }, [userId, openWelcome]);
 
   return (
     <>

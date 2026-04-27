@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { signUp } from '@/services/auth.service';
+import { useUIStore } from '@/store/uiStore';
 
 function isValidEmail(email: string): boolean {
   const trimmed = email.trim().toLowerCase();
@@ -70,9 +71,11 @@ export default function SignupPage() {
         major: major.trim() || undefined,
         gradYear: gradYear ? Number(gradYear) : undefined,
       });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('studysync.showWelcome', 'true');
-      }
+      // Open the welcome tour directly via the store — bypasses the
+      // localStorage-flag dance, which had a race with `onAuthChange`
+      // (the auth subscription fires during `await signUp` and the App
+      // root's userId-change effect can run before the flag is written).
+      useUIStore.getState().openWelcome();
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Signup failed.');

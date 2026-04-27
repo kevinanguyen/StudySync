@@ -107,7 +107,7 @@ export default function Header() {
           alt="StudySync"
           className="h-[92px] w-[92px] rounded-lg flex-shrink-0 object-cover"
         />
-        <span className="text-3xl font-bold tracking-tight">StudySync</span>
+        <span className="text-xl font-bold tracking-tight">StudySync</span>
       </div>
 
       <div className="flex items-center gap-2">

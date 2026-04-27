@@ -98,14 +98,14 @@ export default function Header() {
       }`}
       style={{ height: '72px' }}
     >
-      {/* Logo + Brand */}
+      {/* Logo + Brand. Monkey mark fills the bar's height; the wordmark
+          stays at a smaller text size so the mascot reads as the primary
+          brand element. */}
       <div className="flex items-center gap-3">
-        {/* Brand mark — theme-switched monkey logo. Black bg of the image is
-            intentional sticker styling and matches the rounded badge below. */}
         <img
           src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
           alt="StudySync"
-          className="w-12 h-12 rounded-lg flex-shrink-0 object-cover"
+          className="h-[68px] w-[68px] rounded-lg flex-shrink-0 object-cover"
         />
         <span className="text-2xl font-bold tracking-tight">StudySync</span>
       </div>

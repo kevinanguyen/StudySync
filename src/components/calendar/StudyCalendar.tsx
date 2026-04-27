@@ -233,6 +233,9 @@ export default function StudyCalendar() {
           snapDuration="00:30:00"
           slotLabelInterval="01:00:00"
           slotLabelFormat={{ hour: 'numeric', omitZeroMinute: false, meridiem: 'short' }}
+          // Time text shown on event blocks AND on the drag-select mirror.
+          // `meridiem: 'short'` keeps "9:00 AM – 11:00 AM" readable instead of bare "9:00 – 11:00".
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }}
           firstDay={1}
           nowIndicator
           selectable

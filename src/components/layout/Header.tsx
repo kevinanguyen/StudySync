@@ -93,21 +93,21 @@ export default function Header() {
 
   return (
     <header
-      className={`flex items-center justify-between px-4 flex-shrink-0 transition-colors duration-200 ease-in-out ${
+      className={`flex items-center justify-between px-5 flex-shrink-0 transition-colors duration-200 ease-in-out ${
         theme === 'dark' ? 'bg-[#2d46a8] text-white' : 'bg-[#3B5BDB] text-white'
       }`}
-      style={{ height: '52px' }}
+      style={{ height: '72px' }}
     >
       {/* Logo + Brand */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         {/* Brand mark — theme-switched monkey logo. Black bg of the image is
             intentional sticker styling and matches the rounded badge below. */}
         <img
           src={theme === 'dark' ? '/brand/monkey-mark-dark.png' : '/brand/monkey-mark-light.png'}
           alt="StudySync"
-          className="w-9 h-9 rounded-lg flex-shrink-0 object-cover"
+          className="w-12 h-12 rounded-lg flex-shrink-0 object-cover"
         />
-        <span className="text-xl font-bold tracking-tight">StudySync</span>
+        <span className="text-2xl font-bold tracking-tight">StudySync</span>
       </div>
 
       <div className="flex items-center gap-2">

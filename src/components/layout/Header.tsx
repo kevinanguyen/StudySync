@@ -93,10 +93,10 @@ export default function Header() {
 
   return (
     <header
-      className={`flex items-center justify-between px-5 flex-shrink-0 transition-colors duration-200 ease-in-out ${
+      className={`flex items-center justify-between px-5 flex-shrink-0 transition-colors duration-200 ease-in-out overflow-visible relative z-20 ${
         theme === 'dark' ? 'bg-[#2d46a8] text-white' : 'bg-[#3B5BDB] text-white'
       }`}
-      style={{ height: '96px' }}
+      style={{ height: '64px' }}
     >
       {/* Logo + Brand. Monkey mark fills the bar's height; the wordmark
           stays at a smaller text size so the mascot reads as the primary

@@ -192,16 +192,26 @@ export default function CoursesSidebar() {
           ))}
         </div>
 
-        <div className={`flex flex-col items-center gap-1 py-2 w-full border-t flex-shrink-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
+        {/* Bottom action area — clicking the avatar opens the same profile
+            menu as the expanded panel (Edit profile / Availability / Log
+            out). The Settings icon stays as a direct-nav shortcut. */}
+        <div ref={profileMenuRef} className={`relative flex flex-col items-center gap-1 py-2 w-full border-t flex-shrink-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
           {profile && (
             <Tooltip label={profile.name} side="right">
-              <span>
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                className={`p-0.5 rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/50 ${profileMenuOpen ? 'ring-2 ring-[#3B5BDB]/50' : ''}`}
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                aria-label="Open profile menu"
+              >
                 <Avatar
                   user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
                   size="md"
                   showStatus
                 />
-              </span>
+              </button>
             </Tooltip>
           )}
           <Tooltip label="Settings" side="right">
@@ -216,17 +226,83 @@ export default function CoursesSidebar() {
               </svg>
             </button>
           </Tooltip>
-          <Tooltip label="Log out" side="right">
-            <button
-              onClick={handleLogout}
-              className={`p-1 rounded transition-colors ${theme === 'dark' ? 'text-gray-300 hover:bg-slate-700 hover:text-red-300' : 'text-gray-400 hover:bg-gray-100 hover:text-red-500'}`}
-              aria-label="Log out"
+
+          {/* Profile menu — pops out to the right of the rail. Same content
+              as the expanded panel's menu (Edit profile / Availability / Log
+              out). Width is fixed so the labels read comfortably. */}
+          {profileMenuOpen && profile && (
+            <div
+              role="menu"
+              className={`absolute bottom-2 left-full ml-2 z-30 w-[220px] rounded-lg border shadow-xl p-3 ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+              }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </Tooltip>
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar
+                  user={{ avatarColor: profile.avatar_color, avatarUrl: profile.avatar_url, initials: profile.initials, status: profile.status }}
+                  size="lg"
+                  showStatus
+                />
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold truncate ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{profile.name}</p>
+                  <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>@{profile.username}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className="w-full text-sm font-semibold text-white bg-[#3B5BDB] hover:bg-[#3451c7] px-3 py-2 rounded-md transition-colors mb-3"
+              >
+                Edit profile
+              </button>
+
+              <div className="mb-3">
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Availability</p>
+                <div className="flex flex-col gap-1.5">
+                  {(Object.keys(statusConfig) as UserStatus[]).map((status) => {
+                    const active = profile.status === status;
+                    return (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => handleStatusChange(status)}
+                        disabled={statusSubmitting !== null}
+                        className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors disabled:opacity-60 ${
+                          active
+                            ? 'bg-[#3B5BDB] text-white'
+                            : theme === 'dark'
+                              ? 'bg-slate-900 text-gray-100 hover:bg-slate-700'
+                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: statusConfig[status].color }} />
+                          <span>{statusConfig[status].label}</span>
+                        </span>
+                        {statusSubmitting === status && <span className="text-[10px] font-semibold">Saving…</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`w-full text-sm font-semibold px-3 py-2 rounded-md transition-colors ${
+                  theme === 'dark'
+                    ? 'text-red-300 bg-red-500/10 hover:bg-red-500/20'
+                    : 'text-red-600 bg-red-50 hover:bg-red-100'
+                }`}
+              >
+                Log out
+              </button>
+            </div>
+          )}
         </div>
 
         {modals}
